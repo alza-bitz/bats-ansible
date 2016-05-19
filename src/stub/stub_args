@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+whitespace="[[:space:]]"
+for i in "$@"
+do
+  if [[ $i =~ $whitespace ]]
+  then
+    printf '"%s" ' "$i"
+  else
+    printf '%s ' $i
+  fi
+done
+printf '\n'
