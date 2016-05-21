@@ -14,10 +14,6 @@ load ../load
   stub ansible 'localhost | SUCCESS => {}\n'
   run container_startup fedora
   [[ $output == 'container|localhost|5555|some-container-id' ]]
-  local _container
-  IFS='|' _container=($output)
-  [[ ${#_container[@]} == 4 ]]
-  [[ ${_container[3]} == 'some-container-id' ]]
 }
 
 @test 'container startup with invalid container type' {
@@ -26,6 +22,13 @@ load ../load
   run container_startup centos
   printf '%s\n' $output
   [[ $status > 0 ]]
+}
+
+@test 'container startup with valid container type and container name' {
+  stub docker 'some-container-id\n'
+  stub ansible 'localhost | SUCCESS => {}\n'
+  run container_startup fedora some-container
+  [[ $output == 'some-container|localhost|5555|some-container-id' ]]
 }
 
 @test 'container cleanup with valid container' {
