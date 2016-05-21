@@ -2,7 +2,14 @@
 
 load ../load
 
-@test 'container startup' {
+@test 'container startup with valid container type' {
+  stub docker 'some-container-id\n'
+  stub ansible 'localhost | SUCCESS => {}\n'
+  run container_startup fedora
+  [[ $status > 0 ]]
+}
+
+@test 'container startup with valid container type' {
   stub docker 'some-container-id\n'
   stub ansible 'localhost | SUCCESS => {}\n'
   run container_startup fedora
@@ -13,7 +20,7 @@ load ../load
   [[ ${_container[3]} == 'some-container-id' ]]
 }
 
-@test 'container startup with unknown container type' {
+@test 'container startup with invalid container type' {
   stub docker 'some-container-id\n'
   stub ansible 'localhost | SUCCESS => {}\n'
   run container_startup centos
@@ -71,6 +78,11 @@ load ../load
   [[ ! $_args =~ ' -a ' ]]
 }
 
+@test 'print args' {
+  run print_args arg-one arg-two 'arg three' "arg four" -opt-a arg
+  [[ $output == "arg-one arg-two 'arg three' 'arg four' -opt-a arg" ]]
+}
+
 @test 'container exec with no command' {
   local _container='container|some-ssh-host|some-ssh-port|some-container-id'
   run container_exec $_container
@@ -90,7 +102,7 @@ load ../load
 #  [[ $_args =~ "-i \S+" ]]
   [[ $_args =~ ' -u test ' ]]
   [[ $_args =~ ' -m shell ' ]]
-  [[ $_args =~ " -a 'some-command' " ]] 
+  [[ $_args =~ ' -a some-command ' ]] 
 }
 
 @test 'container exec with command that has no output' {
@@ -106,7 +118,7 @@ load ../load
 #  [[ $_args =~ "-i \S+" ]]
   [[ $_args =~ ' -u test ' ]]
   [[ $_args =~ ' -m shell ' ]]
-  [[ $_args =~ " -a 'some-command' " ]]
+  [[ $_args =~ ' -a some-command ' ]]
 }
 
 @test 'container exec with command that has args' {
@@ -121,7 +133,7 @@ load ../load
 #  [[ $_args =~ "-i \S+" ]]
   [[ $_args =~ ' -u test ' ]]
   [[ $_args =~ ' -m shell ' ]]
-  [[ $_args =~ " -a 'some-command arg-one arg-two \"arg three\" \"arg four\" -opt-a arg' " ]] 
+  [[ $_args =~ " -a \"some-command arg-one arg-two 'arg three' 'arg four' -opt-a arg\" " ]] 
 }
 
 @test 'container dnf conf' {

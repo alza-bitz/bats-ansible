@@ -4,20 +4,29 @@ load ../load
 
 setup() {
   local IFS='|'
-  container=($(container_startup 'bats-ansible' 'alzadude/fedora-ansible-test:23'))
+  container=$(container_startup fedora)
 }
 
 @test 'assert container started' {
-  docker ps -q --no-trunc | grep ${container[3]}
+  local IFS='|' _container
+  _container=($container)
+  docker ps -q --no-trunc | grep ${_container[3]}
 }
 
-@test 'unknown image' {
-  run container_startup 'bats-ansible-2' 'docker-image-that-does-not-exist'
+@test 'container startup with invalid container type' {
+  run container_startup centos
+  [[ $status > 0 ]]
+}
+
+@test 'container exec with command that will not be found' {
+  run container_exec $container some-command
   [[ $status > 0 ]]
 }
 
 teardown() {
 # TODO need an api to 'cleanup all containers started for this test'
-  docker stop ${container[3]} > /dev/null
-  docker rm ${container[3]} > /dev/null
+  local IFS='|' _container
+  _container=($container)
+  docker stop ${_container[3]} > /dev/null
+  docker rm ${_container[3]} > /dev/null
 }

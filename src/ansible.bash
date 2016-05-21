@@ -1,7 +1,8 @@
 
 container_image() {
-  local _container_type=$1 _images=([fedora]='alzadude/fedora-ansible-test:23')
-  [[ -z ${_images[$_container_type]} ]] && return 1
+  local _container_type=$1
+  local -A _images=([fedora]='alzadude/fedora-ansible-test:23')
+  [[ -n ${_images[$_container_type]} ]] || return 1
   printf '%s' ${_images[$_container_type]}
 }
 
@@ -23,7 +24,7 @@ container_startup() {
   local _ssh_host=localhost _ssh_port=5555 _ssh_public_key=~/.ssh/id_rsa.pub
   local _container_image _volume_name _container_name
   _container_image=$(container_image $_container_type) || \
-    { printf 'container_startup: unknown container type %s\n' $_container_type >&2; return 1; }
+    { printf "container_startup: unknown container type '%s'\n" $_container_type >&2; return 1; }
   _volume_name=$(volume_name $_container_type) || return $?
   _container_name=$(container_name $_volume_name $_host) || return $?
   local _container_id
@@ -62,28 +63,40 @@ container_exec_module() {
   ANSIBLE_LIBRARY=../ ansible ${_container[0]} -i $_hosts -u test -m $_name ${_args:+-a "$_args"}
 }
 
+print_args() {
+  local _args=("$@")
+  for _idx in ${!_args[@]}
+  do
+    if [[ ${_args[$_idx]} =~ [[:space:]] ]]
+    then
+      printf "'%s'" "${_args[$_idx]}"
+    else
+      printf '%s' ${_args[$_idx]}
+    fi
+    (( _idx == ${#_args[@]} - 1 )) || printf ' '
+  done
+}
+
 container_exec() {
   [[ $# > 1 ]] || { printf 'container_exec: container, command required\n' >&2; return 1; }
-  local IFS='|' _container _hosts
+  local IFS='|' _container _hosts _args
   _container=($1)
   [[ ${#_container[@]} == 4 ]] || { printf 'container_exec: valid container required\n' >&2; return 1; }
   _hosts=$(tmp_file $(container_inventory "${_container[*]}"))
   shift
-  local IFS=' '
-  set -o pipefail
-  ansible ${_container[0]} -i $_hosts -u test -m shell -a "'$@'" | tail -n +2
+  _args=$(print_args $@) 
+  (set -o pipefail; ansible ${_container[0]} -i $_hosts -u test -m shell -a "$_args" | tail -n +2)
 }
 
 container_exec_sudo() {
   [[ $# > 1 ]] || { printf 'container_exec_sudo: container, command required\n' >&2; return 1; }
-  local IFS='|' _container _hosts
+  local IFS='|' _container _hosts _args
   _container=($1)
   [[ ${#_container[@]} == 4 ]] || { printf 'container_exec_sudo: valid container required\n' >&2; return 1; }
   _hosts=$(tmp_file $(container_inventory "${_container[*]}"))
   shift
-  local IFS=' '
-  set -o pipefail
-  ansible ${_container[0]} -i $_hosts -u test -s -m shell -a "'$@'" | tail -n +2
+  _args=$(print_args $@)
+  (set -o pipefail; ansible ${_container[0]} -i $_hosts -u test -s -m shell -a "$_args" | tail -n +2)
 }
 
 container_dnf_conf() {

@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
-whitespace="[[:space:]]"
 for i in "$@"
 do
-  if [[ $i =~ $whitespace ]]
+  if [[ $i =~ [[:space:]] ]]
   then
     printf '"%s" ' "$i"
   else
