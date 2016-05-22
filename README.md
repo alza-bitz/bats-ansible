@@ -7,7 +7,7 @@ These functions allow the creation of Bats test suites with
 the following features:
 
 - Start one or more containers that will form your test inventory.
-- Apply the role under test to the some or all of the inventory, using
+- Apply the role under test to some or all of the inventory, using
 your test playbook definitions.
 - Make state-based verifications on the inventory, using the functions
 provided, in combination with standard Bats assertion techniques or with
@@ -16,8 +16,8 @@ the third-party [bats-assert][bats-assert] library instead.
 
 ## Example
 
-A simple example with tests for a ficticious Ansible role best illustrates
-the intended use.
+A simple example best illustrates the intended use. The following example
+includes some tests for a ficticious Ansible role named `somerole`.
 
 **tests/test.yml**:
 ```yaml
@@ -71,28 +71,28 @@ required by some helper functions.
 There are multiple supported installation methods. One may be better
 than the others depending on your case.
 
-## Git submodule
+### Git submodule
 
-If your project uses Git, the recommended method of installation is via
+If your Ansible role project uses Git, the recommended method of installation is via
 a [submodule][git-book-submod].
 
 *__Note:__ The following example installs libraries in the
-`./test` directory.*
+`./tests` directory of your Ansible role.*
 
 ```sh
-$ git submodule add https://github.com/alzadude/bats-ansible test/bats-ansible
+$ git submodule add https://github.com/alzadude/bats-ansible tests/bats-ansible
 $ git commit -m 'Add bats-ansible library'
 ```
 
-## Git clone
+### Git clone
 
-If you do not use Git for version control, simply [clone][git-book-clone] the repository.
+If you do not use Git for your role project, simply [clone][git-book-clone] the repository.
 
 *__Note:__ The following example installs libraries in the
-`./test` directory.*
+`./tests` directory of your Ansible role.*
 
 ```sh
-$ git clone https://github.com/alzadude/bats-ansible test/bats-ansible
+$ git clone https://github.com/alzadude/bats-ansible tests/bats-ansible
 ```
 
 ## Loading
@@ -100,15 +100,15 @@ $ git clone https://github.com/alzadude/bats-ansible test/bats-ansible
 A library is loaded by sourcing the `load.bash` file in its main
 directory.
 
-Assuming that libraries are installed in `test`, adding the
-following line to a file in the `test` directory loads the
+Assuming that libraries are installed in the `tests` directory of your Ansible
+role, adding the following line to a file in the `tests` directory will load the
 `bats-ansible` library.
 
 ```sh
 load 'bats-ansible/load'
 ```
 
-*__Note:__ The [`load` function][bats-load] sources a file (with
+*__Note:__ The [`load`][bats-load] function sources a file (with
 `.bash` extension automatically appended) relative to the location of
 the current test file.*
 
@@ -119,10 +119,12 @@ If a library depends on other libraries, they must be loaded as well.
 
 ### `container_startup`
 
-Start a container of the given type and with the given 'host' name,
-and emit pipe-separated container details to stdout.
+Start a container of the given type and 'host' name, and emit pipe-separated
+container details to stdout.
+
 If not given, the 'host' name of the container (for Ansible inventory purposes)
 defaults to `container`.
+
 Fails if the given container type is invalid, or if the container could not be started
 for some reason.
 
