@@ -56,7 +56,7 @@ setup() {
 }
 
 teardown() {
-  container_cleanup $container
+  container_cleanup
 }
 ```
 
@@ -119,8 +119,8 @@ If a library depends on other libraries, they must be loaded as well.
 
 ### `container_startup`
 
-Start a container of the given type and 'host' name, and emit pipe-separated
-container details to stdout.
+Start a container of the given type and with the given 'host' name, and emit 
+pipe-separated container details to stdout.
 
 If not given, the 'host' name of the container (for Ansible inventory purposes)
 defaults to `container`.

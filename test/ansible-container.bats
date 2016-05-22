@@ -2,15 +2,19 @@
 
 load ../load
 
-setup() {
-  local IFS='|'
-  container=$(container_startup fedora)
-}
-
 @test 'assert container started' {
   local IFS='|' _container
-  _container=($container)
+  _container=($(container_startup fedora))
   docker ps -q --no-trunc | grep ${_container[3]}
+}
+
+@test 'assert container volumes' {
+  local IFS='|' _container _mounts
+  _container=($(container_startup fedora))
+  _mounts=($(docker inspect -f '{{ range .Mounts }}{{ .Destination }}|{{ end }}' ${_container[3]}))
+  [[ ${#_mounts[@]} == 2 ]]
+  [[ "|${_mounts[*]}|" =~ |/var/cache/dnf| ]]
+  [[ "|${_mounts[*]}|" =~ |/var/tmp| ]]
 }
 
 @test 'container startup with invalid container type' {
@@ -18,15 +22,26 @@ setup() {
   [[ $status > 0 ]]
 }
 
-@test 'container exec with command that will not be found' {
-  run container_exec $container some-command
+@test 'container startup twice with different host names' {
+  skip 'will fail until ssh port allocation is implemented'
+  container_startup fedora container-one
+  container_startup fedora container-two
+}
+
+@test 'container startup twice with duplicate host names' {
+  run container_startup fedora
+  run container_startup fedora
+  [[ $status > 0 ]]
+}
+
+@test 'container exec with command not found' {
+  local _container
+  _container=$(container_startup fedora)
+  run container_exec $_container some-command
   [[ $status > 0 ]]
 }
 
 teardown() {
-# TODO need an api to 'cleanup all containers started for this test'
-  local IFS='|' _container
-  _container=($container)
-  docker stop ${_container[3]} > /dev/null
-  docker rm ${_container[3]} > /dev/null
+  docker ps -q -f label=bats_ansible_test_run=$BATS_ANSIBLE_TEST_RUN | xargs -r docker stop > /dev/null
+  docker ps -q -a -f label=bats_ansible_test_run=$BATS_ANSIBLE_TEST_RUN | xargs -r docker rm > /dev/null
 }

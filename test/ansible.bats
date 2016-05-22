@@ -31,17 +31,16 @@ load ../load
   [[ $output == 'some-container|localhost|5555|some-container-id' ]]
 }
 
-@test 'container cleanup with valid container' {
-  local _container='container|some-ssh-host|some-ssh-port|some-container-id'
+@test 'container cleanup with one container' {
   stub docker 'some-container-id\n'
-  run container_cleanup $_container
+  run container_cleanup
   [[ $status == 0 ]]
 }
 
-@test 'container cleanup with no container' {
-#  stub docker 'No such container' 1
+@test 'container cleanup with no containers' {
+  stub docker '\n'
   run container_cleanup
-  [[ $status > 0 ]]
+  [[ $status == 0 ]]
 }
 
 @test 'container inventory with valid container' {
@@ -82,7 +81,7 @@ load ../load
 }
 
 @test 'print args' {
-  run print_args arg-one arg-two 'arg three' "arg four" -opt-a arg
+  run __print_args arg-one arg-two 'arg three' "arg four" -opt-a arg
   [[ $output == "arg-one arg-two 'arg three' 'arg four' -opt-a arg" ]]
 }
 
