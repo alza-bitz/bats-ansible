@@ -11,7 +11,7 @@ __container_image() {
 __name_prefix() {
   local _checksum IFS=' '
   _checksum=($(cksum - <<< "$BATS_TEST_DIRNAME")) || return 1
-  printf 'bats_ansible_%s_%s' ${_checksum[0]}
+  printf 'bats_ansible_%s' ${_checksum[0]}
 }
 
 __container_name() {
