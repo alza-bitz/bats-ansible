@@ -5,7 +5,7 @@ load ../load
 @test 'container startup with valid container type' {
   stub docker 'some-container-id\n'
   stub ansible 'localhost | SUCCESS => {}\n'
-  run container_startup fedora
+  BATS_ANSIBLE_SSH_KEY=$(tmp_file_empty) run container_startup fedora
   [[ $output == 'container|localhost|5555|some-container-id' ]]
 }
 
@@ -19,7 +19,7 @@ load ../load
 @test 'container startup with valid container type and container name' {
   stub docker 'some-container-id\n'
   stub ansible 'localhost | SUCCESS => {}\n'
-  run container_startup fedora some-container
+  BATS_ANSIBLE_SSH_KEY=$(tmp_file_empty) run container_startup fedora some-container
   [[ $output == 'some-container|localhost|5555|some-container-id' ]]
 }
 

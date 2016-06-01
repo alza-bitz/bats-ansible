@@ -33,7 +33,8 @@ __container_volume() {
 container_startup() {
   [[ $# > 0 ]] || { printf 'container_startup: container type required\n' >&2; return 1; }
   local _container_type=$1 _host=${2:-container}
-  local _ssh_host=localhost _ssh_port=5555 _ssh_public_key=~/.ssh/id_rsa.pub
+  local _ssh_host=localhost _ssh_port=5555 _ssh_key
+  _ssh_key="$(< ${BATS_ANSIBLE_SSH_KEY-~/.ssh/id_rsa.pub})" || return $?
   local _container_image _name_prefix _container_name
   _container_image=$(__container_image $_container_type) || \
     { printf "container_startup: unknown container type '%s'\n" $_container_type >&2; return 1; }
@@ -42,7 +43,7 @@ container_startup() {
   _container_id=$(docker run -d \
     --name $(__container_name $_name_prefix $_host) -l bats_ansible_test_run=$BATS_ANSIBLE_TEST_RUN \
     -p $_ssh_port:22 \
-    -e USERNAME=test -e AUTHORIZED_KEYS="$(< $_ssh_public_key)" \
+    -e USERNAME=test -e AUTHORIZED_KEYS="$_ssh_key" \
     -v $(__container_volume $_name_prefix /var/cache/dnf) -v $(__container_volume $_name_prefix /var/tmp) \
     $_container_image) || return $?
   ansible localhost -m wait_for -a "port=$_ssh_port host=$_ssh_host search_regex=OpenSSH delay=1 timeout=10" > /dev/null
