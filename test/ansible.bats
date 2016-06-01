@@ -6,13 +6,6 @@ load ../load
   stub docker 'some-container-id\n'
   stub ansible 'localhost | SUCCESS => {}\n'
   run container_startup fedora
-  [[ $status > 0 ]]
-}
-
-@test 'container startup with valid container type' {
-  stub docker 'some-container-id\n'
-  stub ansible 'localhost | SUCCESS => {}\n'
-  run container_startup fedora
   [[ $output == 'container|localhost|5555|some-container-id' ]]
 }
 
@@ -20,7 +13,6 @@ load ../load
   stub docker 'some-container-id\n'
   stub ansible 'localhost | SUCCESS => {}\n'
   run container_startup centos
-  printf '%s\n' $output
   [[ $status > 0 ]]
 }
 
