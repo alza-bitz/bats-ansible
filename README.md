@@ -1,5 +1,7 @@
 # bats-ansible
 
+[![Build Status](https://travis-ci.org/alzadude/bats-ansible.svg?branch=feature/travis-ci)](https://travis-ci.org/alzadude/bats-ansible)
+
 `bats-ansible` is a helper library providing useful functions for
 testing [Ansible][ansible] roles using [Bats][bats].
 
