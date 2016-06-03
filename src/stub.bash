@@ -10,6 +10,13 @@ stub() {
   chmod +x $BATS_TEST_DIRNAME/stub/$_command
 }
 
+stub_err() {
+  local _command=$1 _exit=${2:-1}
+  mkdir -p $BATS_TEST_DIRNAME/stub
+  printf 'exit %s\n' $_exit > $BATS_TEST_DIRNAME/stub/$_command
+  chmod +x $BATS_TEST_DIRNAME/stub/$_command
+}
+
 stub_args() {
   local _command=$1
   mkdir -p $BATS_TEST_DIRNAME/stub

@@ -16,6 +16,20 @@ load ../load
   [[ $status > 0 ]]
 }
 
+@test 'container startup with ssh key not found' {
+  stub docker 'some-container-id\n'
+  stub ansible 'localhost | SUCCESS => {}\n'
+  BATS_ANSIBLE_SSH_KEY=/does/not/exist run container_startup fedora
+  [[ $status > 0 ]]
+}
+
+@test 'container startup with ssh timeout' {
+  stub docker 'some-container-id\n'
+  stub_err ansible
+  run container_startup fedora
+  [[ $status == 5 ]]
+}
+
 @test 'container startup with valid container type and container name' {
   stub docker 'some-container-id\n'
   stub ansible 'localhost | SUCCESS => {}\n'
