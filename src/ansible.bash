@@ -69,7 +69,7 @@ container_exec_module() {
   _container=($1)
   [[ ${#_container[@]} == 4 ]] || { printf 'container_exec_module: valid container required\n' >&2; return 1; }
   _hosts=$(tmp_file $(container_inventory "${_container[*]}"))
-  ANSIBLE_LIBRARY=../ ansible ${_container[0]} -i $_hosts -u test -m $_name ${_args:+-a "$_args"}
+  ANSIBLE_LIBRARY=../ ansible ${_container[0]} -i $_hosts -u test -m $_name ${_args:+-a} $_args
 }
 
 container_exec_module_sudo() {
@@ -78,7 +78,7 @@ container_exec_module_sudo() {
   _container=($1)
   [[ ${#_container[@]} == 4 ]] || { printf 'container_exec_module: valid container required\n' >&2; return 1; }
   _hosts=$(tmp_file $(container_inventory "${_container[*]}"))
-  ANSIBLE_LIBRARY=../ ansible ${_container[0]} -i $_hosts -u test -s -m $_name ${_args:+-a "$_args"}
+  ANSIBLE_LIBRARY=../ ansible ${_container[0]} -i $_hosts -u test -s -m $_name ${_args:+-a} $_args
 }
 
 __print_args() {
@@ -97,13 +97,13 @@ __print_args() {
 
 container_exec() {
   [[ $# > 1 ]] || { printf 'container_exec: container, command required\n' >&2; return 1; }
-  local IFS='|' _container _hosts _args
+  local IFS='|' _container _hosts _cmd
   _container=($1)
   [[ ${#_container[@]} == 4 ]] || { printf 'container_exec: valid container required\n' >&2; return 1; }
   _hosts=$(tmp_file $(container_inventory "${_container[*]}"))
   shift
-  _args=$(__print_args $@) 
-  (set -o pipefail; ansible ${_container[0]} -i $_hosts -u test -m shell -a "$_args" | tail -n +2)
+  _cmd=$(__print_args $@) 
+  (set -o pipefail; ansible ${_container[0]} -i $_hosts -u test -m shell -a "$_cmd" | tail -n +2)
 }
 
 container_exec_sudo() {

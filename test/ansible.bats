@@ -86,9 +86,30 @@ load ../load
   [[ ! $_args =~ ' -a ' ]]
 }
 
+@test 'container exec module with module name and args' {
+  local _container='container|some-ssh-host|some-ssh-port|some-container-id'
+  local _tmp _args_record _args
+  _tmp=$(stub_args_record ansible 'container | SUCCESS => {}\nstdout from some-module\n')
+  run container_exec_module $_container some-module "arg-one=val-one arg-two='val two'"
+  [[ $output =~ 'stdout from some-module' ]]
+  IFS=$'\n' _args_record=($(< $_tmp))
+  [[ ${#_args_record[@]} == 1 ]]
+  _args=${_args_record[0]}
+  [[ $_args =~ ^container ]]
+#  [[ $_args =~ "-i \S+" ]]
+  [[ $_args =~ ' -u test ' ]]
+  [[ $_args =~ ' -m some-module ' ]]
+  [[ $_args =~ " -a \"arg-one=val-one arg-two='val two'\"" ]]
+}
+
 @test 'print args' {
   run __print_args arg-one arg-two 'arg three' "arg four" -opt-a arg
   [[ $output == "arg-one arg-two 'arg three' 'arg four' -opt-a arg" ]]
+}
+
+@test 'print args with no args' {
+  run __print_args
+  [[ $output == "" ]]
 }
 
 @test 'container exec with no command' {
