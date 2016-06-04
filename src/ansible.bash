@@ -108,13 +108,13 @@ container_exec() {
 
 container_exec_sudo() {
   [[ $# > 1 ]] || { printf 'container_exec_sudo: container, command required\n' >&2; return 1; }
-  local IFS='|' _container _hosts _args
+  local IFS='|' _container _hosts _cmd
   _container=($1)
   [[ ${#_container[@]} == 4 ]] || { printf 'container_exec_sudo: valid container required\n' >&2; return 1; }
   _hosts=$(tmp_file $(container_inventory "${_container[*]}"))
   shift
-  _args=$(__print_args $@)
-  (set -o pipefail; ansible ${_container[0]} -i $_hosts -u test -s -m shell -a "$_args" | tail -n +2)
+  _cmd=$(__print_args $@)
+  (set -o pipefail; ansible ${_container[0]} -i $_hosts -u test -s -m shell -a "$_cmd" | tail -n +2)
 }
 
 container_dnf_conf() {

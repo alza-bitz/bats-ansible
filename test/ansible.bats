@@ -12,7 +12,7 @@ load ../load
 @test 'container startup with invalid container type' {
   stub_err docker
   stub_err ansible
-  run container_startup centos
+  BATS_ANSIBLE_SSH_KEY=$(tmp_file_empty) run container_startup centos
   [[ $status == 3 ]]
 }
 
@@ -26,7 +26,7 @@ load ../load
 @test 'container startup with ssh timeout' {
   stub 'some-container-id\n' docker
   stub_err ansible
-  run container_startup fedora
+  BATS_ANSIBLE_SSH_KEY=$(tmp_file_empty) run container_startup fedora
   [[ $status == 5 ]]
 }
 

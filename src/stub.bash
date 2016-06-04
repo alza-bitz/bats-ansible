@@ -6,6 +6,7 @@ stub() {
   shift 2
   _args=${@:-.*}
   mkdir -p $BATS_TEST_DIRNAME/stub
+  [[ -f $BATS_TEST_DIRNAME/stub/$_command ]] || printf '#!/usr/bin/env bash\n' > $BATS_TEST_DIRNAME/stub/$_command
   printf '[[ $@ =~ %s ]] && printf '\''%s'\'' && exit\n' "$_args" "$_format" >> $BATS_TEST_DIRNAME/stub/$_command 
   chmod +x $BATS_TEST_DIRNAME/stub/$_command
 }
