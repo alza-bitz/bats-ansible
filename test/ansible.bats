@@ -10,22 +10,22 @@ load ../load
 }
 
 @test 'container startup with invalid container type' {
-  stub_err docker
-  stub_err ansible
+  stub_err '' docker
+  stub_err '' ansible
   BATS_ANSIBLE_SSH_KEY=$(tmp_file_empty) run container_startup centos
   [[ $status == 3 ]]
 }
 
 @test 'container startup with ssh key not found' {
-  stub_err docker
-  stub_err ansible
+  stub_err '' docker
+  stub_err '' ansible
   BATS_ANSIBLE_SSH_KEY=/does/not/exist run container_startup fedora
   [[ $status == 2 ]]
 }
 
 @test 'container startup with ssh timeout' {
   stub 'some-container-id\n' docker
-  stub_err ansible
+  stub_err '' ansible
   BATS_ANSIBLE_SSH_KEY=$(tmp_file_empty) run container_startup fedora
   [[ $status == 5 ]]
 }
@@ -121,7 +121,7 @@ load ../load
 @test 'container exec with command' {
   local _container='container|some-ssh-host|some-ssh-port|some-container-id'
   local _tmp _args_record _args
-  _tmp=$(stub_and_record 'container | SUCCESS => {}\nstdout from some-command\n' ansible)
+  _tmp=$(stub_and_record 'container | SUCCESS | rc=0 >>\nstdout from some-command\n' ansible)
   run container_exec $_container some-command
   [[ $output == 'stdout from some-command' ]]
   IFS=$'\n' _args_record=($(< $_tmp))
@@ -134,10 +134,26 @@ load ../load
   [[ $_args =~ ' -a some-command ' ]] 
 }
 
+@test 'container exec with command that fails' {
+  local _container='container|some-ssh-host|some-ssh-port|some-container-id'
+  stub_err 'container | FAILED | rc=1 >>\n' ansible 123
+  run container_exec $_container some-command-that-fails
+  [[ $status == 123 ]]
+  [[ $output == '' ]]
+}
+
+@test 'container exec with command and ansible fails' {
+  local _container='container|some-ssh-host|some-ssh-port|some-container-id'
+  stub_err 'container | UNREACHABLE! => {\n}' ansible 123
+  run container_exec $_container some-command
+  [[ $status == 123 ]] 
+  [[ $output == 'container | UNREACHABLE! => {'$'\n''}' ]]
+}
+
 @test 'container exec with command that has no output' {
   local _container='container|some-ssh-host|some-ssh-port|some-container-id'
   local _tmp _args_record _args
-  _tmp=$(stub_and_record 'container | SUCCESS => {}\n' ansible)
+  _tmp=$(stub_and_record 'container | SUCCESS | rc=0 >>\n' ansible)
   run container_exec $_container some-command
   [[ $output == '' ]]
   IFS=$'\n' _args_record=($(< $_tmp))
@@ -153,7 +169,7 @@ load ../load
 @test 'container exec with command that has args' {
   local _container='container|some-ssh-host|some-ssh-port|some-container-id'
   local _tmp _args_record _args
-  _tmp=$(stub_and_record 'container | SUCCESS => {}\n' ansible)
+  _tmp=$(stub_and_record 'container | rc=0 >>\n' ansible)
   container_exec $_container some-command arg-one arg-two 'arg three' "arg four" -opt-a arg
   IFS=$'\n' _args_record=($(< $_tmp))
   [[ ${#_args_record[@]} == 1 ]]

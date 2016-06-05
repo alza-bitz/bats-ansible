@@ -103,7 +103,7 @@ container_exec() {
   _hosts=$(tmp_file $(container_inventory "${_container[*]}"))
   shift
   _cmd=$(__print_args $@) 
-  (set -o pipefail; ansible ${_container[0]} -i $_hosts -u test -m shell -a "$_cmd" | tail -n +2)
+  (set -o pipefail; ansible ${_container[0]} -i $_hosts -u test -m shell -a "$_cmd" | sed -r -e '1!b' -e '/rc=[0-9]+/d')
 }
 
 container_exec_sudo() {
@@ -114,7 +114,7 @@ container_exec_sudo() {
   _hosts=$(tmp_file $(container_inventory "${_container[*]}"))
   shift
   _cmd=$(__print_args $@)
-  (set -o pipefail; ansible ${_container[0]} -i $_hosts -u test -s -m shell -a "$_cmd" | tail -n +2)
+  (set -o pipefail; ansible ${_container[0]} -i $_hosts -u test -s -m shell -a "$_cmd" | sed -r -e '1!b' -e '/rc=[0-9]+/d')
 }
 
 container_dnf_conf() {

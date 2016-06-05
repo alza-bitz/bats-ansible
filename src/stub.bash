@@ -12,9 +12,9 @@ stub() {
 }
 
 stub_err() {
-  local _command=$1 _exit=${2:-1}
+  local _format=$1 _command=$2 _exit=${3:-1}
   mkdir -p $BATS_TEST_DIRNAME/stub
-  printf 'exit %s\n' $_exit > $BATS_TEST_DIRNAME/stub/$_command
+  printf 'printf '\''%s'\'' && exit %s\n' "$_format" $_exit > $BATS_TEST_DIRNAME/stub/$_command
   chmod +x $BATS_TEST_DIRNAME/stub/$_command
 }
 
