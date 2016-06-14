@@ -1,39 +1,62 @@
 #!/usr/bin/env bats
 
+load ../src/stub
+
+stub '' ssh-keygen
+
 load ../load
 
 @test 'container startup with valid container type' {
   stub 'some-container-id\n' docker
   stub 'localhost | SUCCESS => {}\n' ansible
-  BATS_ANSIBLE_SSH_KEY=$(tmp_file_empty) run container_startup fedora
+  touch ${BATS_ANSIBLE_SSH_KEY}.pub
+  run container_startup fedora
   [[ $output == 'container|localhost|5555|some-container-id' ]]
+}
+
+@test 'container startup with no container type' {
+  stub_err '' docker
+  stub_err '' ansible
+  run container_startup
+  [[ $status == 1 ]]
+}
+
+@test 'container startup with ssh pub key not readable' {
+  stub_err '' docker
+  stub_err '' ansible
+  run container_startup fedora
+  [[ $status == 4 ]]
 }
 
 @test 'container startup with invalid container type' {
   stub_err '' docker
   stub_err '' ansible
-  BATS_ANSIBLE_SSH_KEY=$(tmp_file_empty) run container_startup centos
-  [[ $status == 3 ]]
+  touch ${BATS_ANSIBLE_SSH_KEY}.pub
+  run container_startup centos
+  [[ $status == 5 ]]
 }
 
-@test 'container startup with ssh key not found' {
-  stub_err '' docker
+@test 'container startup with docker error' {
+  stub_err 'something went wrong\n' docker
   stub_err '' ansible
-  BATS_ANSIBLE_SSH_KEY=/does/not/exist run container_startup fedora
-  [[ $status == 2 ]]
+  touch ${BATS_ANSIBLE_SSH_KEY}.pub
+  run container_startup fedora
+  [[ $status == 6 ]]
 }
 
 @test 'container startup with ssh timeout' {
   stub 'some-container-id\n' docker
   stub_err '' ansible
-  BATS_ANSIBLE_SSH_KEY=$(tmp_file_empty) run container_startup fedora
-  [[ $status == 5 ]]
+  touch ${BATS_ANSIBLE_SSH_KEY}.pub
+  run container_startup fedora
+  [[ $status == 7 ]]
 }
 
 @test 'container startup with valid container type and container name' {
   stub 'some-container-id\n' docker
   stub 'localhost | SUCCESS => {}\n' ansible
-  BATS_ANSIBLE_SSH_KEY=$(tmp_file_empty) run container_startup fedora some-container
+  touch ${BATS_ANSIBLE_SSH_KEY}.pub
+  run container_startup fedora some-container
   [[ $output == 'some-container|localhost|5555|some-container-id' ]]
 }
 
@@ -80,6 +103,7 @@ load ../load
   [[ ${#_args_record[@]} == 1 ]]
   _args=${_args_record[0]}
   [[ $_args =~ ^container ]]
+  [[ $_args =~ " --private-key $BATS_ANSIBLE_SSH_KEY " ]]
 #  [[ $_args =~ "-i \S+" ]]
   [[ $_args =~ ' -u test ' ]]
   [[ $_args =~ ' -m some-module ' ]]
@@ -96,6 +120,7 @@ load ../load
   [[ ${#_args_record[@]} == 1 ]]
   _args=${_args_record[0]}
   [[ $_args =~ ^container ]]
+  [[ $_args =~ " --private-key $BATS_ANSIBLE_SSH_KEY " ]]
 #  [[ $_args =~ "-i \S+" ]]
   [[ $_args =~ ' -u test ' ]]
   [[ $_args =~ ' -m some-module ' ]]
@@ -128,6 +153,7 @@ load ../load
   [[ ${#_args_record[@]} == 1 ]]
   _args=${_args_record[0]}
   [[ $_args =~ ^container ]]
+  [[ $_args =~ " --private-key $BATS_ANSIBLE_SSH_KEY " ]]
 #  [[ $_args =~ "-i \S+" ]]
   [[ $_args =~ ' -u test ' ]]
   [[ $_args =~ ' -m shell ' ]]
@@ -160,6 +186,7 @@ load ../load
   [[ ${#_args_record[@]} == 1 ]]
   _args=${_args_record[0]}
   [[ $_args =~ ^container ]]
+  [[ $_args =~ " --private-key $BATS_ANSIBLE_SSH_KEY " ]]
 #  [[ $_args =~ "-i \S+" ]]
   [[ $_args =~ ' -u test ' ]]
   [[ $_args =~ ' -m shell ' ]]
@@ -175,6 +202,7 @@ load ../load
   [[ ${#_args_record[@]} == 1 ]]
   _args=${_args_record[0]}
   [[ $_args =~ ^container ]]
+  [[ $_args =~ " --private-key $BATS_ANSIBLE_SSH_KEY " ]]
 #  [[ $_args =~ "-i \S+" ]]
   [[ $_args =~ ' -u test ' ]]
   [[ $_args =~ ' -m shell ' ]]
@@ -190,6 +218,7 @@ load ../load
   [[ ${#_args_record[@]} == 1 ]]
   _args=${_args_record[0]}
   [[ $_args =~ ^container ]]
+  [[ $_args =~ " --private-key $BATS_ANSIBLE_SSH_KEY " ]]
 #  [[ $_args =~ "-i \S+" ]]
   [[ $_args =~ ' -u test ' ]]
   [[ $_args =~ ' -s ' ]]

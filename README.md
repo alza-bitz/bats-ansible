@@ -48,12 +48,12 @@ setup() {
 }
 
 @test "Role can be applied to container" {
-  ansible-playbook -i $hosts test.yml
+  ansible-playbook --private-key $BATS_ANSIBLE_SSH_KEY -i $hosts test.yml
 }
 
 @test "Role is idempotent" {
-  run ansible-playbook -i $hosts test.yml
-  run ansible-playbook -i $hosts test.yml
+  run ansible-playbook --private-key $BATS_ANSIBLE_SSH_KEY -i $hosts test.yml
+  run ansible-playbook --private-key $BATS_ANSIBLE_SSH_KEY -i $hosts test.yml
   [[ $output =~ changed=0.*unreachable=0.*failed=0 ]]
 }
 
