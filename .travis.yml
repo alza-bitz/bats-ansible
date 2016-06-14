@@ -1,3 +1,5 @@
+language: bash
+
 before_install:
   - git clone https://github.com/sstephenson/bats.git ../bats
   - pushd ../bats && ./install.sh ~/bats-install && popd
