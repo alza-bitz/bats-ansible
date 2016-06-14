@@ -106,6 +106,7 @@ load ../load
   [[ $_args =~ " --private-key $BATS_ANSIBLE_SSH_KEY " ]]
 #  [[ $_args =~ "-i \S+" ]]
   [[ $_args =~ ' -u test ' ]]
+  [[ ! $_args =~ ' -s ' ]]
   [[ $_args =~ ' -m some-module ' ]]
   [[ ! $_args =~ ' -a ' ]]
 }
@@ -125,6 +126,25 @@ load ../load
   [[ $_args =~ ' -u test ' ]]
   [[ $_args =~ ' -m some-module ' ]]
   [[ $_args =~ " -a \"arg-one=val-one arg-two='val two'\"" ]]
+}
+
+@test 'container exec module with module name and sudo' {
+  local _container='container|some-ssh-host|some-ssh-port|some-container-id'
+  local _tmp _args_record _args
+  _tmp=$(stub_and_record 'container | SUCCESS => {}\nstdout from some-module\n' ansible)
+  run container_exec_module_sudo $_container some-module
+  printf '%s\n' $output
+  [[ $output =~ 'stdout from some-module' ]]
+  IFS=$'\n' _args_record=($(< $_tmp))
+  [[ ${#_args_record[@]} == 1 ]]
+  _args=${_args_record[0]}
+  [[ $_args =~ ^container ]]
+  [[ $_args =~ " --private-key $BATS_ANSIBLE_SSH_KEY " ]]
+#  [[ $_args =~ "-i \S+" ]]
+  [[ $_args =~ ' -u test ' ]]
+  [[ $_args =~ ' -s ' ]]
+  [[ $_args =~ ' -m some-module ' ]]
+  [[ ! $_args =~ ' -a ' ]]
 }
 
 @test 'print args' {
@@ -156,6 +176,7 @@ load ../load
   [[ $_args =~ " --private-key $BATS_ANSIBLE_SSH_KEY " ]]
 #  [[ $_args =~ "-i \S+" ]]
   [[ $_args =~ ' -u test ' ]]
+  [[ ! $_args =~ ' -s ' ]]
   [[ $_args =~ ' -m shell ' ]]
   [[ $_args =~ ' -a some-command ' ]] 
 }
@@ -207,6 +228,24 @@ load ../load
   [[ $_args =~ ' -u test ' ]]
   [[ $_args =~ ' -m shell ' ]]
   [[ $_args =~ " -a \"some-command arg-one arg-two 'arg three' 'arg four' -opt-a arg\" " ]] 
+}
+
+@test 'container exec with command and sudo' {
+  local _container='container|some-ssh-host|some-ssh-port|some-container-id'
+  local _tmp _args_record _args
+  _tmp=$(stub_and_record 'container | SUCCESS | rc=0 >>\nstdout from some-command\n' ansible)
+  run container_exec_sudo $_container some-command
+  [[ $output == 'stdout from some-command' ]]
+  IFS=$'\n' _args_record=($(< $_tmp))
+  [[ ${#_args_record[@]} == 1 ]]
+  _args=${_args_record[0]}
+  [[ $_args =~ ^container ]]
+  [[ $_args =~ " --private-key $BATS_ANSIBLE_SSH_KEY " ]]
+#  [[ $_args =~ "-i \S+" ]]
+  [[ $_args =~ ' -u test ' ]]
+  [[ $_args =~ ' -s ' ]]
+  [[ $_args =~ ' -m shell ' ]]
+  [[ $_args =~ ' -a some-command ' ]]
 }
 
 @test 'container dnf conf' {

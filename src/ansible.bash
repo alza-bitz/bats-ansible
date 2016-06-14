@@ -74,24 +74,23 @@ container_inventory() {
   printf '%s ansible_host=%s ansible_port=%s\n' ${_container[0]} ${_container[1]} ${_container[2]}
 }
 
-container_exec_module() {
-  [[ $# > 1 ]] || { printf 'container_exec_module: container, module name required\n' >&2; return 1; }
-  local IFS='|' _container _hosts _name=$2 _args=$3
-  _container=($1)
+__container_exec_module() {
+  local IFS='|' _sudo=$1 _container _name=$3 _args=$4 _hosts
+  _container=($2)
   [[ ${#_container[@]} == 4 ]] || { printf 'container_exec_module: valid container required\n' >&2; return 1; }
   _hosts=$(tmp_file $(container_inventory "${_container[*]}"))
   ANSIBLE_LIBRARY=../ \
-    ansible ${_container[0]} --private-key $BATS_ANSIBLE_SSH_KEY -i $_hosts -u test -m $_name ${_args:+-a} $_args
+    ansible ${_container[0]} --private-key $BATS_ANSIBLE_SSH_KEY -i $_hosts -u test ${_sudo:+-s} -m $_name ${_args:+-a} $_args
+}
+
+container_exec_module() {
+  [[ $# > 1 ]] || { printf 'container_exec_module: container, module name required\n' >&2; return 1; }
+  __container_exec_module '' "$@"
 }
 
 container_exec_module_sudo() {
-  [[ $# > 1 ]] || { printf 'container_exec_module: container, module name required\n' >&2; return 1; }
-  local IFS='|' _container _hosts _name=$2 _args=$3
-  _container=($1)
-  [[ ${#_container[@]} == 4 ]] || { printf 'container_exec_module: valid container required\n' >&2; return 1; }
-  _hosts=$(tmp_file $(container_inventory "${_container[*]}"))
-  ANSIBLE_LIBRARY=../ \
-    ansible ${_container[0]} --private-key $BATS_ANSIBLE_SSH_KEY -i $_hosts -u test -s -m $_name ${_args:+-a} $_args
+  [[ $# > 1 ]] || { printf 'container_exec_module_sudo: container, module name required\n' >&2; return 1; }
+  __container_exec_module sudo "$@"
 }
 
 __print_args() {
@@ -108,30 +107,26 @@ __print_args() {
   done
 }
 
-container_exec() {
-  [[ $# > 1 ]] || { printf 'container_exec: container, command required\n' >&2; return 1; }
-  local IFS='|' _container _hosts _cmd
-  _container=($1)
+__container_exec() {
+  local IFS='|' _sudo=$1 _container _cmd _hosts
+  _container=($2)
   [[ ${#_container[@]} == 4 ]] || { printf 'container_exec: valid container required\n' >&2; return 1; }
   _hosts=$(tmp_file $(container_inventory "${_container[*]}"))
-  shift
-  _cmd=$(__print_args $@) 
-  (set -o pipefail; 
-    ansible ${_container[0]} --private-key $BATS_ANSIBLE_SSH_KEY -i $_hosts -u test -m shell -a "$_cmd" | 
+  shift 2
+  _cmd=$(__print_args $@)
+  (set -o pipefail;
+    ansible ${_container[0]} --private-key $BATS_ANSIBLE_SSH_KEY -i $_hosts -u test ${_sudo:+-s} -m shell -a "$_cmd" |
     sed -r -e '1!b' -e '/rc=[0-9]+/d')
+}
+
+container_exec() {
+  [[ $# > 1 ]] || { printf 'container_exec: container, command required\n' >&2; return 1; }
+  __container_exec '' "$@"
 }
 
 container_exec_sudo() {
   [[ $# > 1 ]] || { printf 'container_exec_sudo: container, command required\n' >&2; return 1; }
-  local IFS='|' _container _hosts _cmd
-  _container=($1)
-  [[ ${#_container[@]} == 4 ]] || { printf 'container_exec_sudo: valid container required\n' >&2; return 1; }
-  _hosts=$(tmp_file $(container_inventory "${_container[*]}"))
-  shift
-  _cmd=$(__print_args $@)
-  (set -o pipefail; 
-    ansible ${_container[0]} --private-key $BATS_ANSIBLE_SSH_KEY -i $_hosts -u test -s -m shell -a "$_cmd" | 
-    sed -r -e '1!b' -e '/rc=[0-9]+/d')
+  __container_exec sudo "$@"
 }
 
 container_dnf_conf() {
