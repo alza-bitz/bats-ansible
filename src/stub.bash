@@ -1,21 +1,25 @@
 
 export PATH="$BATS_TEST_DIRNAME/stub:$PATH"
 
-stub() {
-  local _format=$1 _command=$2 _args
-  shift 2
+__stub() {
+  local _format=$1 _exit=$2 _command=$3 _args
+  shift 3
   _args=${@:-.*}
   mkdir -p $BATS_TEST_DIRNAME/stub
   [[ -f $BATS_TEST_DIRNAME/stub/$_command ]] || printf '#!/usr/bin/env bash\n' > $BATS_TEST_DIRNAME/stub/$_command
-  printf '[[ $@ =~ %s ]] && printf '\''%s'\'' && exit\n' "$_args" "$_format" >> $BATS_TEST_DIRNAME/stub/$_command 
+  printf '[[ $@ =~ %s ]] && printf '\''%s'\'' && exit %s\n' "$_args" "$_format" $_exit >> $BATS_TEST_DIRNAME/stub/$_command
   chmod +x $BATS_TEST_DIRNAME/stub/$_command
 }
 
+stub() {
+  local _format=$1 _command=$2 _args
+  shift 2
+  _args=$@
+  __stub "$_format" 0 $_command $_args 
+}
+
 stub_err() {
-  local _format=$1 _command=$2 _exit=${3:-1}
-  mkdir -p $BATS_TEST_DIRNAME/stub
-  printf 'printf '\''%s'\'' && exit %s\n' "$_format" $_exit > $BATS_TEST_DIRNAME/stub/$_command
-  chmod +x $BATS_TEST_DIRNAME/stub/$_command
+  __stub "$@"
 }
 
 stub_and_record() {

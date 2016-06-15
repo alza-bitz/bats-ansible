@@ -7,57 +7,68 @@ stub '' ssh-keygen
 load ../load
 
 @test 'container startup with valid container type' {
-  stub 'some-container-id\n' docker
+  stub 'some-container-id\n' docker run
   stub 'localhost | SUCCESS => {}\n' ansible
+  stub '1.2.3.4' docker inspect
   touch ${BATS_ANSIBLE_SSH_KEY}.pub
   run container_startup fedora
-  [[ $output == 'container|localhost|5555|some-container-id' ]]
+  [[ $output == 'container|1.2.3.4|22|some-container-id' ]]
 }
 
 @test 'container startup with no container type' {
-  stub_err '' docker
-  stub_err '' ansible
+  stub_err '' 123 docker
+  stub_err '' 123 ansible
   run container_startup
   [[ $status == 1 ]]
 }
 
 @test 'container startup with ssh pub key not readable' {
-  stub_err '' docker
-  stub_err '' ansible
+  stub_err '' 123 docker
+  stub_err '' 123 ansible
   run container_startup fedora
   [[ $status == 4 ]]
 }
 
 @test 'container startup with invalid container type' {
-  stub_err '' docker
-  stub_err '' ansible
+  stub_err '' 123 docker
+  stub_err '' 123 ansible
   touch ${BATS_ANSIBLE_SSH_KEY}.pub
   run container_startup centos
   [[ $status == 5 ]]
 }
 
-@test 'container startup with docker error' {
-  stub_err 'something went wrong\n' docker
-  stub_err '' ansible
+@test 'container startup with docker run error' {
+  stub_err 'something went wrong\n' 123 docker run
+  stub_err '' 123 ansible
   touch ${BATS_ANSIBLE_SSH_KEY}.pub
   run container_startup fedora
   [[ $status == 6 ]]
 }
 
-@test 'container startup with ssh timeout' {
-  stub 'some-container-id\n' docker
-  stub_err '' ansible
+@test 'container startup with docker inspect error' {
+  stub 'some-container-id\n' docker run
+  stub_err 'something went wrong\n' 123 docker inspect
+  stub_err '' 123 ansible
   touch ${BATS_ANSIBLE_SSH_KEY}.pub
   run container_startup fedora
   [[ $status == 7 ]]
 }
 
-@test 'container startup with valid container type and container name' {
+@test 'container startup with ssh timeout' {
   stub 'some-container-id\n' docker
+  stub_err '' 123 ansible
+  touch ${BATS_ANSIBLE_SSH_KEY}.pub
+  run container_startup fedora
+  [[ $status == 8 ]]
+}
+
+@test 'container startup with valid container type and container name' {
+  stub 'some-container-id\n' docker run
   stub 'localhost | SUCCESS => {}\n' ansible
+  stub '1.2.3.4' docker inspect
   touch ${BATS_ANSIBLE_SSH_KEY}.pub
   run container_startup fedora some-container
-  [[ $output == 'some-container|localhost|5555|some-container-id' ]]
+  [[ $output == 'some-container|1.2.3.4|22|some-container-id' ]]
 }
 
 @test 'container cleanup with one container' {
@@ -183,7 +194,7 @@ load ../load
 
 @test 'container exec with command that fails' {
   local _container='container|some-ssh-host|some-ssh-port|some-container-id'
-  stub_err 'container | FAILED | rc=1 >>\n' ansible 123
+  stub_err 'container | FAILED | rc=1 >>\n' 123 ansible
   run container_exec $_container some-command-that-fails
   [[ $status == 123 ]]
   [[ $output == '' ]]
@@ -191,7 +202,7 @@ load ../load
 
 @test 'container exec with command and ansible fails' {
   local _container='container|some-ssh-host|some-ssh-port|some-container-id'
-  stub_err 'container | UNREACHABLE! => {\n}' ansible 123
+  stub_err 'container | UNREACHABLE! => {\n}' 123 ansible
   run container_exec $_container some-command
   [[ $status == 123 ]] 
   [[ $output == 'container | UNREACHABLE! => {'$'\n''}' ]]

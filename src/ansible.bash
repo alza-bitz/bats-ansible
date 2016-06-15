@@ -1,4 +1,6 @@
 
+export ANSIBLE_HOST_KEY_CHECKING=false
+
 readonly BATS_ANSIBLE_TEST_RUN=$(set -o pipefail; (< /dev/urandom tr -dc 0-9 2>/dev/null || true) | head -c 5)
 
 if [[ $BATS_ANSIBLE_TMPDIR && $BATS_ANSIBLE_TEST_RUN ]]
@@ -44,22 +46,23 @@ container_startup() {
   [[ $BATS_ANSIBLE_TEST_RUN ]] || { printf 'container_startup: could not define BATS_ANSIBLE_TEST_RUN\n' >&2; return 2; }
   [[ $BATS_ANSIBLE_SSH_KEY ]] || { printf 'container_startup: could not define BATS_ANSIBLE_SSH_KEY: %s\n' "$_SSH_KEY_RESULT" >&2; return 3; }
   local _container_type=$1 _host=${2:-container}
-  local _ssh_host=localhost _ssh_port=5555 _ssh_key_pub
+  local _ssh_key_pub
   _ssh_key_pub=$(< ${BATS_ANSIBLE_SSH_KEY}.pub) || return 4
-  local _container_image _name_prefix _container_name
+  local _container_image _name_prefix _container_name _container_ip
   _container_image=$(__container_image $_container_type) || \
     { printf "container_startup: unknown container type '%s'\n" $_container_type >&2; return 5; }
   _name_prefix=$(__name_prefix) || return $?
   local _container_id
   _container_id=$(docker run -d \
     --name $(__container_name $_name_prefix $_host) -l bats_ansible_test_run=$BATS_ANSIBLE_TEST_RUN \
-    -p $_ssh_port:22 \
     -e USERNAME=test -e AUTHORIZED_KEYS="$_ssh_key_pub" \
     -v $(__container_volume $_name_prefix /var/cache/dnf) -v $(__container_volume $_name_prefix /var/tmp) \
     $_container_image) || return 6
-  ansible localhost -m wait_for -a "port=$_ssh_port host=$_ssh_host search_regex=OpenSSH delay=1 timeout=10" > /dev/null || \
-    { printf 'container_startup: timed out waiting for ssh\n' >&2; return 7; }
-  printf '%s|%s|%s|%s' $_host $_ssh_host $_ssh_port $_container_id
+  _container_ip=$(docker inspect --format='{{.NetworkSettings.IPAddress}}' $_container_id) || \
+    { printf 'container_startup: could not get container ip\n' >&2; return 7; }
+  ansible localhost -m wait_for -a "port=22 host=$_container_ip search_regex=OpenSSH delay=1 timeout=10" > /dev/null || \
+    { printf 'container_startup: timed out waiting for ssh\n' >&2; return 8; }
+  printf '%s|%s|%s|%s' $_host $_container_ip 22 $_container_id
 }
 
 container_cleanup() {

@@ -23,7 +23,6 @@ load ../load
 }
 
 @test 'container startup twice with different host names' {
-  skip 'will fail until ssh port allocation is implemented'
   container_startup fedora container-one
   container_startup fedora container-two
 }
@@ -39,6 +38,7 @@ load ../load
   _container=$(container_startup fedora)
   run container_exec $_container some-command
   [[ $status > 0 ]]
+  [[ $output =~ 'command not found' ]]
 }
 
 teardown() {
