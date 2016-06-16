@@ -2,13 +2,13 @@
 
 load ../src/stub
 
-stub_err 'something went wrong\n' ssh-keygen
+stub_err 'something went wrong\n' 123 ssh-keygen
 
 load ../load
 
 @test 'container startup with ssh key not defined' {
-  stub_err '' docker
-  stub_err '' ansible
+  stub_err '' 123 docker
+  stub_err '' 123 ansible
   run container_startup fedora
   [[ $status == 3 ]]
   [[ $output =~ 'something went wrong' ]]
