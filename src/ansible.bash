@@ -1,4 +1,6 @@
 
+export ANSIBLE_ROLES_PATH=${BATS_TEST_DIRNAME}/../..
+export ANSIBLE_CONFIG=${BATS_TEST_DIRNAME}/bats-ansible.cfg
 export ANSIBLE_HOST_KEY_CHECKING=false
 
 readonly BATS_ANSIBLE_TEST_RUN=$(set -o pipefail; (< /dev/urandom tr -dc 0-9 2>/dev/null || true) | head -c 5)
