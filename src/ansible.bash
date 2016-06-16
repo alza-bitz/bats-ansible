@@ -5,10 +5,10 @@ readonly BATS_ANSIBLE_TEST_RUN=$(set -o pipefail; (< /dev/urandom tr -dc 0-9 2>/
 
 if [[ $BATS_ANSIBLE_TMPDIR && $BATS_ANSIBLE_TEST_RUN ]]
 then
-  readonly _SSH_KEY_RESULT=$(< /dev/zero ssh-keygen -q -N "" -f ${BATS_ANSIBLE_TMPDIR}/${BATS_ANSIBLE_TEST_RUN}_rsa 2>&1 || true)
-  if [[ ! $_SSH_KEY_RESULT ]]
+  readonly BATS_ANSIBLE_KEY_RESULT=$(< /dev/zero ssh-keygen -q -N "" -f ${BATS_ANSIBLE_TMPDIR}/${BATS_ANSIBLE_TEST_RUN}_rsa 2>&1 || true)
+  if [[ ! $BATS_ANSIBLE_KEY_RESULT ]]
   then
-    readonly BATS_ANSIBLE_SSH_KEY=${BATS_ANSIBLE_TMPDIR}/${BATS_ANSIBLE_TEST_RUN}_rsa
+    export ANSIBLE_PRIVATE_KEY_FILE=${BATS_ANSIBLE_TMPDIR}/${BATS_ANSIBLE_TEST_RUN}_rsa
   fi
 fi
 
@@ -44,10 +44,11 @@ __container_volume() {
 container_startup() {
   [[ $# > 0 ]] || { printf 'container_startup: container type required\n' >&2; return 1; }
   [[ $BATS_ANSIBLE_TEST_RUN ]] || { printf 'container_startup: could not define BATS_ANSIBLE_TEST_RUN\n' >&2; return 2; }
-  [[ $BATS_ANSIBLE_SSH_KEY ]] || { printf 'container_startup: could not define BATS_ANSIBLE_SSH_KEY: %s\n' "$_SSH_KEY_RESULT" >&2; return 3; }
+  [[ ! $BATS_ANSIBLE_KEY_RESULT ]] || \
+    { printf 'container_startup: could not define ANSIBLE_PRIVATE_KEY_FILE: %s\n' "$BATS_ANSIBLE_KEY_RESULT" >&2; return 3; }
   local _container_type=$1 _host=${2:-container}
   local _ssh_key_pub
-  _ssh_key_pub=$(< ${BATS_ANSIBLE_SSH_KEY}.pub) || return 4
+  _ssh_key_pub=$(< ${ANSIBLE_PRIVATE_KEY_FILE}.pub) || return 4
   local _container_image _name_prefix _container_name _container_ip
   _container_image=$(__container_image $_container_type) || \
     { printf "container_startup: unknown container type '%s'\n" $_container_type >&2; return 5; }
@@ -82,8 +83,7 @@ __container_exec_module() {
   _container=($2)
   [[ ${#_container[@]} == 4 ]] || { printf 'container_exec_module: valid container required\n' >&2; return 1; }
   _hosts=$(tmp_file $(container_inventory "${_container[*]}"))
-  ANSIBLE_LIBRARY=../ \
-    ansible ${_container[0]} --private-key $BATS_ANSIBLE_SSH_KEY -i $_hosts -u test ${_sudo:+-s} -m $_name ${_args:+-a} $_args
+  ANSIBLE_LIBRARY=../ ansible ${_container[0]} -i $_hosts -u test ${_sudo:+-s} -m $_name ${_args:+-a} $_args
 }
 
 container_exec_module() {
@@ -118,8 +118,7 @@ __container_exec() {
   shift 2
   _cmd=$(__print_args $@)
   (set -o pipefail;
-    ansible ${_container[0]} --private-key $BATS_ANSIBLE_SSH_KEY -i $_hosts -u test ${_sudo:+-s} -m shell -a "$_cmd" |
-    sed -r -e '1!b' -e '/rc=[0-9]+/d')
+    ansible ${_container[0]} -i $_hosts -u test ${_sudo:+-s} -m shell -a "$_cmd" | sed -r -e '1!b' -e '/rc=[0-9]+/d')
 }
 
 container_exec() {
@@ -138,7 +137,7 @@ container_dnf_conf() {
   _container=($1)
   [[ ${#_container[@]} == 4 ]] || { printf 'container_dnf_conf: valid container required\n' >&2; return 1; }
   _hosts=$(tmp_file $(container_inventory "${_container[*]}"))
-  ansible ${_container[0]} --private-key $BATS_ANSIBLE_SSH_KEY -i $_hosts -u test -s -m lineinfile -a \
+  ansible ${_container[0]} -i $_hosts -u test -s -m lineinfile -a \
     "dest=/etc/dnf/dnf.conf regexp='^$_name=\S+$' line='$_name=$_value'" > /dev/null
 }
 

@@ -6,11 +6,15 @@ stub '' ssh-keygen
 
 load ../load
 
+@test 'container ssh key exported' {
+  env | grep -q ^ANSIBLE_PRIVATE_KEY_FILE=${BATS_ANSIBLE_TMPDIR}/${BATS_ANSIBLE_TEST_RUN}_rsa
+}
+
 @test 'container startup with valid container type' {
   stub 'some-container-id\n' docker run
   stub 'localhost | SUCCESS => {}\n' ansible
   stub '1.2.3.4' docker inspect
-  touch ${BATS_ANSIBLE_SSH_KEY}.pub
+  touch ${ANSIBLE_PRIVATE_KEY_FILE}.pub
   run container_startup fedora
   [[ $output == 'container|1.2.3.4|22|some-container-id' ]]
 }
@@ -32,7 +36,7 @@ load ../load
 @test 'container startup with invalid container type' {
   stub_err '' 123 docker
   stub_err '' 123 ansible
-  touch ${BATS_ANSIBLE_SSH_KEY}.pub
+  touch ${ANSIBLE_PRIVATE_KEY_FILE}.pub
   run container_startup centos
   [[ $status == 5 ]]
 }
@@ -40,7 +44,7 @@ load ../load
 @test 'container startup with docker run error' {
   stub_err 'something went wrong\n' 123 docker run
   stub_err '' 123 ansible
-  touch ${BATS_ANSIBLE_SSH_KEY}.pub
+  touch ${ANSIBLE_PRIVATE_KEY_FILE}.pub
   run container_startup fedora
   [[ $status == 6 ]]
 }
@@ -49,7 +53,7 @@ load ../load
   stub 'some-container-id\n' docker run
   stub_err 'something went wrong\n' 123 docker inspect
   stub_err '' 123 ansible
-  touch ${BATS_ANSIBLE_SSH_KEY}.pub
+  touch ${ANSIBLE_PRIVATE_KEY_FILE}.pub
   run container_startup fedora
   [[ $status == 7 ]]
 }
@@ -57,7 +61,7 @@ load ../load
 @test 'container startup with ssh timeout' {
   stub 'some-container-id\n' docker
   stub_err '' 123 ansible
-  touch ${BATS_ANSIBLE_SSH_KEY}.pub
+  touch ${ANSIBLE_PRIVATE_KEY_FILE}.pub
   run container_startup fedora
   [[ $status == 8 ]]
 }
@@ -66,7 +70,7 @@ load ../load
   stub 'some-container-id\n' docker run
   stub 'localhost | SUCCESS => {}\n' ansible
   stub '1.2.3.4' docker inspect
-  touch ${BATS_ANSIBLE_SSH_KEY}.pub
+  touch ${ANSIBLE_PRIVATE_KEY_FILE}.pub
   run container_startup fedora some-container
   [[ $output == 'some-container|1.2.3.4|22|some-container-id' ]]
 }
@@ -114,7 +118,6 @@ load ../load
   [[ ${#_args_record[@]} == 1 ]]
   _args=${_args_record[0]}
   [[ $_args =~ ^container ]]
-  [[ $_args =~ " --private-key $BATS_ANSIBLE_SSH_KEY " ]]
 #  [[ $_args =~ "-i \S+" ]]
   [[ $_args =~ ' -u test ' ]]
   [[ ! $_args =~ ' -s ' ]]
@@ -132,7 +135,6 @@ load ../load
   [[ ${#_args_record[@]} == 1 ]]
   _args=${_args_record[0]}
   [[ $_args =~ ^container ]]
-  [[ $_args =~ " --private-key $BATS_ANSIBLE_SSH_KEY " ]]
 #  [[ $_args =~ "-i \S+" ]]
   [[ $_args =~ ' -u test ' ]]
   [[ $_args =~ ' -m some-module ' ]]
@@ -150,7 +152,6 @@ load ../load
   [[ ${#_args_record[@]} == 1 ]]
   _args=${_args_record[0]}
   [[ $_args =~ ^container ]]
-  [[ $_args =~ " --private-key $BATS_ANSIBLE_SSH_KEY " ]]
 #  [[ $_args =~ "-i \S+" ]]
   [[ $_args =~ ' -u test ' ]]
   [[ $_args =~ ' -s ' ]]
@@ -184,7 +185,6 @@ load ../load
   [[ ${#_args_record[@]} == 1 ]]
   _args=${_args_record[0]}
   [[ $_args =~ ^container ]]
-  [[ $_args =~ " --private-key $BATS_ANSIBLE_SSH_KEY " ]]
 #  [[ $_args =~ "-i \S+" ]]
   [[ $_args =~ ' -u test ' ]]
   [[ ! $_args =~ ' -s ' ]]
@@ -218,7 +218,6 @@ load ../load
   [[ ${#_args_record[@]} == 1 ]]
   _args=${_args_record[0]}
   [[ $_args =~ ^container ]]
-  [[ $_args =~ " --private-key $BATS_ANSIBLE_SSH_KEY " ]]
 #  [[ $_args =~ "-i \S+" ]]
   [[ $_args =~ ' -u test ' ]]
   [[ $_args =~ ' -m shell ' ]]
@@ -234,7 +233,6 @@ load ../load
   [[ ${#_args_record[@]} == 1 ]]
   _args=${_args_record[0]}
   [[ $_args =~ ^container ]]
-  [[ $_args =~ " --private-key $BATS_ANSIBLE_SSH_KEY " ]]
 #  [[ $_args =~ "-i \S+" ]]
   [[ $_args =~ ' -u test ' ]]
   [[ $_args =~ ' -m shell ' ]]
@@ -251,7 +249,6 @@ load ../load
   [[ ${#_args_record[@]} == 1 ]]
   _args=${_args_record[0]}
   [[ $_args =~ ^container ]]
-  [[ $_args =~ " --private-key $BATS_ANSIBLE_SSH_KEY " ]]
 #  [[ $_args =~ "-i \S+" ]]
   [[ $_args =~ ' -u test ' ]]
   [[ $_args =~ ' -s ' ]]
@@ -268,7 +265,6 @@ load ../load
   [[ ${#_args_record[@]} == 1 ]]
   _args=${_args_record[0]}
   [[ $_args =~ ^container ]]
-  [[ $_args =~ " --private-key $BATS_ANSIBLE_SSH_KEY " ]]
 #  [[ $_args =~ "-i \S+" ]]
   [[ $_args =~ ' -u test ' ]]
   [[ $_args =~ ' -s ' ]]
