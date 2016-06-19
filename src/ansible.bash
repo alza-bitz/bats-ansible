@@ -85,7 +85,7 @@ __container_exec_module() {
   _container=($2)
   [[ ${#_container[@]} == 4 ]] || { printf 'container_exec_module: valid container required\n' >&2; return 1; }
   _hosts=$(tmp_file $(container_inventory "${_container[*]}"))
-  ANSIBLE_LIBRARY=../ ansible ${_container[0]} -i $_hosts -u test ${_sudo:+-s} -m $_name ${_args:+-a} $_args
+  ANSIBLE_LIBRARY=${BATS_TEST_DIRNAME}/.. ansible ${_container[0]} -i $_hosts -u test ${_sudo:+-s} -m $_name ${_args:+-a} $_args
 }
 
 container_exec_module() {
@@ -102,7 +102,7 @@ __print_args() {
   local _args=("$@")
   for _idx in ${!_args[@]}
   do
-    if [[ ${_args[$_idx]} =~ [[:space:]] ]]
+    if [[ ${_args[$_idx]} =~ [[:space:]\&] ]]
     then
       printf "'%s'" "${_args[$_idx]}"
     else

@@ -33,6 +33,14 @@ load ../load
   [[ $status > 0 ]]
 }
 
+@test 'container module exec ping' {
+  local _container
+  _container=$(container_startup fedora)
+  run container_exec_module $_container ping
+  [[ $status == 0 ]]
+  [[ $output =~ SUCCESS.*changed.*false.*ping.*pong ]]
+}
+
 @test 'container exec with command not found' {
   local _container
   _container=$(container_startup fedora)

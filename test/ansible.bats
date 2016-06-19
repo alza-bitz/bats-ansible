@@ -146,7 +146,6 @@ load ../load
   local _tmp _args_record _args
   _tmp=$(stub_and_record 'container | SUCCESS => {}\nstdout from some-module\n' ansible)
   run container_exec_module_sudo $_container some-module
-  printf '%s\n' $output
   [[ $output =~ 'stdout from some-module' ]]
   IFS=$'\n' _args_record=($(< $_tmp))
   [[ ${#_args_record[@]} == 1 ]]
@@ -228,7 +227,7 @@ load ../load
   local _container='container|some-ssh-host|some-ssh-port|some-container-id'
   local _tmp _args_record _args
   _tmp=$(stub_and_record 'container | rc=0 >>\n' ansible)
-  container_exec $_container some-command arg-one arg-two 'arg three' "arg four" -opt-a arg
+  container_exec $_container some-command arg-one arg-two 'arg three' "arg four" 'http://arg/five?a=b&x=y' -opt-a arg
   IFS=$'\n' _args_record=($(< $_tmp))
   [[ ${#_args_record[@]} == 1 ]]
   _args=${_args_record[0]}
@@ -236,7 +235,7 @@ load ../load
 #  [[ $_args =~ "-i \S+" ]]
   [[ $_args =~ ' -u test ' ]]
   [[ $_args =~ ' -m shell ' ]]
-  [[ $_args =~ " -a \"some-command arg-one arg-two 'arg three' 'arg four' -opt-a arg\" " ]] 
+  [[ $_args =~ " -a \"some-command arg-one arg-two 'arg three' 'arg four' 'http://arg/five?a=b&x=y' -opt-a arg\" " ]] 
 }
 
 @test 'container exec with command and sudo' {
