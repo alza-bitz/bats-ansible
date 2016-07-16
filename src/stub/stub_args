@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
-for i in "$@"
+_args=("$@")
+for _idx in ${!_args[@]}
 do
-  if [[ $i =~ [[:space:]\&] ]]
+  if [[ ${_args[$_idx]} =~ [[:space:]] ]]
   then
-    printf '"%s" ' "$i"
+    printf '"%s"' "${_args[$_idx]//\"/\\\"}"
   else
-    printf '%s ' $i
+    printf '%s' ${_args[$_idx]}
   fi
+  (( _idx == ${#_args[@]} - 1 )) || printf ' '
 done
 printf '\n'

@@ -118,10 +118,10 @@ load ../load
   [[ ${#_args_record[@]} == 1 ]]
   _args=${_args_record[0]}
   [[ $_args =~ ^container ]]
-#  [[ $_args =~ "-i \S+" ]]
+  [[ $_args =~ -i\ [^[:space:]]+ ]]
   [[ $_args =~ ' -u test ' ]]
   [[ ! $_args =~ ' -s ' ]]
-  [[ $_args =~ ' -m some-module ' ]]
+  [[ $_args =~ \ -m\ some-module$ ]]
   [[ ! $_args =~ ' -a ' ]]
 }
 
@@ -129,16 +129,16 @@ load ../load
   local _container='container|some-ssh-host|some-ssh-port|some-container-id'
   local _tmp _args_record _args
   _tmp=$(stub_and_record 'container | SUCCESS => {}\nstdout from some-module\n' ansible)
-  run container_exec_module $_container some-module "arg-one=val-one arg-two='val two'"
+  run container_exec_module $_container some-module "arg-one=val-one arg-two='val two' arg-three=\"val three\""
   [[ $output =~ 'stdout from some-module' ]]
   IFS=$'\n' _args_record=($(< $_tmp))
   [[ ${#_args_record[@]} == 1 ]]
   _args=${_args_record[0]}
   [[ $_args =~ ^container ]]
-#  [[ $_args =~ "-i \S+" ]]
+  [[ $_args =~ -i\ [^[:space:]]+ ]]
   [[ $_args =~ ' -u test ' ]]
   [[ $_args =~ ' -m some-module ' ]]
-  [[ $_args =~ " -a \"arg-one=val-one arg-two='val two'\"" ]]
+  [[ $_args =~ " -a \"arg-one=val-one arg-two='val two' arg-three=\\\"val three\\\"\"" ]]
 }
 
 @test 'container exec module with module name and sudo' {
@@ -151,16 +151,17 @@ load ../load
   [[ ${#_args_record[@]} == 1 ]]
   _args=${_args_record[0]}
   [[ $_args =~ ^container ]]
-#  [[ $_args =~ "-i \S+" ]]
+  [[ $_args =~ -i\ [^[:space:]]+ ]]
   [[ $_args =~ ' -u test ' ]]
   [[ $_args =~ ' -s ' ]]
-  [[ $_args =~ ' -m some-module ' ]]
+  [[ $_args =~ \ -m\ some-module$ ]]
   [[ ! $_args =~ ' -a ' ]]
 }
 
 @test 'print args' {
   run __print_args arg-one arg-two 'arg three' "arg four" -opt-a arg
-  [[ $output == "arg-one arg-two 'arg three' 'arg four' -opt-a arg" ]]
+  printf '%s\n' $output
+  [[ $output == "arg-one arg-two arg\\ three arg\\ four -opt-a arg" ]]
 }
 
 @test 'print args with no args' {
@@ -184,11 +185,11 @@ load ../load
   [[ ${#_args_record[@]} == 1 ]]
   _args=${_args_record[0]}
   [[ $_args =~ ^container ]]
-#  [[ $_args =~ "-i \S+" ]]
+  [[ $_args =~ -i\ [^[:space:]]+ ]]
   [[ $_args =~ ' -u test ' ]]
   [[ ! $_args =~ ' -s ' ]]
   [[ $_args =~ ' -m shell ' ]]
-  [[ $_args =~ ' -a some-command ' ]] 
+  [[ $_args =~ \ -a\ some-command$ ]] 
 }
 
 @test 'container exec with command that fails' {
@@ -217,10 +218,10 @@ load ../load
   [[ ${#_args_record[@]} == 1 ]]
   _args=${_args_record[0]}
   [[ $_args =~ ^container ]]
-#  [[ $_args =~ "-i \S+" ]]
+  [[ $_args =~ -i\ [^[:space:]]+ ]]
   [[ $_args =~ ' -u test ' ]]
   [[ $_args =~ ' -m shell ' ]]
-  [[ $_args =~ ' -a some-command ' ]]
+  [[ $_args =~ \ -a\ some-command$ ]]
 }
 
 @test 'container exec with command that has args' {
@@ -232,10 +233,10 @@ load ../load
   [[ ${#_args_record[@]} == 1 ]]
   _args=${_args_record[0]}
   [[ $_args =~ ^container ]]
-#  [[ $_args =~ "-i \S+" ]]
+  [[ $_args =~ -i\ [^[:space:]]+ ]]
   [[ $_args =~ ' -u test ' ]]
   [[ $_args =~ ' -m shell ' ]]
-  [[ $_args =~ " -a \"some-command arg-one arg-two 'arg three' 'arg four' 'http://arg/five?a=b&x=y' -opt-a arg\" " ]] 
+  [[ $_args =~ " -a \"some-command arg-one arg-two arg\\ three arg\\ four http://arg/five\\?a=b\\&x=y -opt-a arg\"" ]] 
 }
 
 @test 'container exec with command and sudo' {
@@ -248,11 +249,11 @@ load ../load
   [[ ${#_args_record[@]} == 1 ]]
   _args=${_args_record[0]}
   [[ $_args =~ ^container ]]
-#  [[ $_args =~ "-i \S+" ]]
+  [[ $_args =~ -i\ [^[:space:]]+ ]]
   [[ $_args =~ ' -u test ' ]]
   [[ $_args =~ ' -s ' ]]
   [[ $_args =~ ' -m shell ' ]]
-  [[ $_args =~ ' -a some-command ' ]]
+  [[ $_args =~ \ -a\ some-command$ ]]
 }
 
 @test 'container dnf conf' {
@@ -268,7 +269,7 @@ load ../load
   [[ $_args =~ ' -u test ' ]]
   [[ $_args =~ ' -s ' ]]
   [[ $_args =~ ' -m lineinfile ' ]]
-  [[ $_args =~ " -a \"dest=/etc/dnf/dnf.conf regexp='^some-key=\S+$' line='some-key=some-value'\" " ]]
+  [[ $_args =~ " -a \"dest=/etc/dnf/dnf.conf regexp='^some-key=\S+$' line='some-key=some-value'\"" ]]
 }
 
 @test 'container dnf conf with no conf value' {

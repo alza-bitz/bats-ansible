@@ -102,12 +102,7 @@ __print_args() {
   local _args=("$@")
   for _idx in ${!_args[@]}
   do
-    if [[ ${_args[$_idx]} =~ [[:space:]\&] ]]
-    then
-      printf "'%s'" "${_args[$_idx]}"
-    else
-      printf '%s' ${_args[$_idx]}
-    fi
+    printf '%q' "${_args[$_idx]}"
     (( _idx == ${#_args[@]} - 1 )) || printf ' '
   done
 }
@@ -118,7 +113,7 @@ __container_exec() {
   [[ ${#_container[@]} == 4 ]] || { printf 'container_exec: valid container required\n' >&2; return 1; }
   _hosts=$(tmp_file $(container_inventory "${_container[*]}"))
   shift 2
-  _cmd=$(__print_args $@)
+  _cmd=$(__print_args "$@")
   (set -o pipefail;
     ansible ${_container[0]} -i $_hosts -u test ${_sudo:+-s} -m shell -a "$_cmd" | sed -r -e '1!b' -e '/rc=[0-9]+/d')
 }
