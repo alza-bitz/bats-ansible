@@ -2,7 +2,7 @@
 _args=("$@")
 for _idx in ${!_args[@]}
 do
-  if [[ ${_args[$_idx]} =~ [[:space:]] ]]
+  if [[ ${_args[$_idx]} =~ [[:space:]\&] ]]
   then
     printf '"%s"' "${_args[$_idx]//\"/\\\"}"
   else

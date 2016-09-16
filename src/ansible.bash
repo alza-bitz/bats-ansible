@@ -102,7 +102,12 @@ __print_args() {
   local _args=("$@")
   for _idx in ${!_args[@]}
   do
-    printf '%q' "${_args[$_idx]}"
+    if [[ ${_args[$_idx]} =~ [[:space:]\&] ]]
+    then
+      printf "'%s'" "${_args[$_idx]}"
+    else
+      printf '%s' ${_args[$_idx]}
+    fi
     (( _idx == ${#_args[@]} - 1 )) || printf ' '
   done
 }
