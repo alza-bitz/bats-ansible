@@ -150,7 +150,7 @@ The function library will then be available in the current shell for development
 
 ### Testing
 
-    $ bats tests/*.bats
+    $ bats test/*.bats
 
 <!-- REFERENCES -->
 

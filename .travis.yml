@@ -3,8 +3,8 @@ language: bash
 before_install:
   - git clone https://github.com/sstephenson/bats.git ../bats
   - pushd ../bats && ./install.sh ~/bats-install && popd
-  - mkdir ~/bin
+  - mkdir -p ~/bin
   - ln -s ~/bats-install/bin/bats ~/bin/bats
 
 script:
-  - bats test/ansible.bats test/ansible-ssh-key.bats test/tmp.bats
+  - bats test/ansible.bats test/tmp.bats
