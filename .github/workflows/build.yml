@@ -9,7 +9,9 @@ jobs:
         uses: actions/checkout@v2
       - name: "Install Dependencies"
         run: |
+          pushd ..
           git clone https://github.com/bats-core/bats-core.git
           sudo bats-core/install.sh /usr/local
+          popd
       - name: "Tests"
         run: bats test/*.bats
