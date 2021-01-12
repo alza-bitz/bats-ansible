@@ -6,7 +6,7 @@ readonly BATS_ANSIBLE_TEST_RUN=$(set -o pipefail; (< /dev/urandom tr -dc 0-9 2>/
 
 
 container_testuser() {
-  useradd -m test
+  useradd -m -s /bin/bash test
 }
 
 container_wait() {
