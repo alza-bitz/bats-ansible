@@ -27,9 +27,8 @@ container_startup() {
   [[ $BATS_ANSIBLE_TEST_RUN ]] || { printf 'container_startup: could not define BATS_ANSIBLE_TEST_RUN\n' >&2; return 2; }
   local _container_image=$1 _container_id
   _container_id=$(docker run --init -d \
-    -v $BATS_ANSIBLE_DIR:/bats-ansible:ro,Z \
     -l bats_ansible_test_run=$BATS_ANSIBLE_TEST_RUN \
-    $_container_image bash -c 'set -e; source /bats-ansible/load.bash; container_testuser; while true; do sleep 10000; done') || return 3
+    $_container_image bash -c 'set -e; useradd -m -s /bin/bash test; while true; do sleep 10000; done') || return 3
   container_wait $_container_id || { printf 'container_startup: timed out waiting for container to start\n' >&2; return 4; }
   printf '%s' $_container_id
 }

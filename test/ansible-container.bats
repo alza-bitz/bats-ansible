@@ -6,9 +6,6 @@ load ../load
   local _container _mounts
   _container=$(container_startup python)
   docker ps -q --no-trunc | grep $_container
-  _mounts=($(docker inspect -f '{{ range .Mounts }}{{ .Destination }}|{{ end }}' $_container))
-  [[ ${#_mounts[@]} == 1 ]]
-  [[ "|${_mounts[*]}|" =~ |/bats-ansible| ]]
 }
 
 @test 'container startup with image not found' {
