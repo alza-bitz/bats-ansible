@@ -1,6 +1,6 @@
 # bats-ansible
 
-[![Build Status](https://travis-ci.org/alzadude/bats-ansible.svg?branch=master)](https://travis-ci.org/alzadude/bats-ansible)
+[![Build](https://github.com/alzadude/bats-ansible/workflows/Build/badge.svg)](https://github.com/alzadude/bats-ansible/actions?query=workflow%3ABuild)
 
 `bats-ansible` is a helper library providing useful functions for
 testing [Ansible][ansible] roles using [Bats][bats].
