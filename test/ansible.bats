@@ -2,77 +2,39 @@
 
 load ../src/stub
 
-stub '' ssh-keygen
-
 load ../load
 
-@test 'container ssh key exported' {
-  env | grep -q ^ANSIBLE_PRIVATE_KEY_FILE=${BATS_ANSIBLE_TMPDIR}/${BATS_ANSIBLE_TEST_RUN}_rsa
-}
-
-@test 'container startup with valid container type' {
+@test 'container startup' {
   stub 'some-container-id\n' docker run
-  stub 'localhost | SUCCESS => {}\n' ansible
-  stub '1.2.3.4' docker inspect
-  touch ${ANSIBLE_PRIVATE_KEY_FILE}.pub
-  run container_startup fedora
-  [[ $output == 'container|1.2.3.4|22|some-container-id' ]]
+  stub 'true' docker inspect
+  run container_startup debian
+  [[ $output == 'some-container-id' ]]
 }
 
-@test 'container startup with no container type' {
+@test 'container startup with no image' {
   stub_err '' 123 docker
   stub_err '' 123 ansible
   run container_startup
   [[ $status == 1 ]]
 }
 
-@test 'container startup with ssh pub key not readable' {
+@test 'container startup with image not found' {
   stub_err '' 123 docker
-  stub_err '' 123 ansible
-  run container_startup fedora
-  [[ $status == 4 ]]
-}
-
-@test 'container startup with invalid container type' {
-  stub_err '' 123 docker
-  stub_err '' 123 ansible
-  touch ${ANSIBLE_PRIVATE_KEY_FILE}.pub
-  run container_startup centos
-  [[ $status == 5 ]]
+  run container_startup xyz
+  [[ $status == 3 ]]
 }
 
 @test 'container startup with docker run error' {
   stub_err 'something went wrong\n' 123 docker run
-  stub_err '' 123 ansible
-  touch ${ANSIBLE_PRIVATE_KEY_FILE}.pub
-  run container_startup fedora
-  [[ $status == 6 ]]
+  run container_startup debian
+  [[ $status == 3 ]]
 }
 
 @test 'container startup with docker inspect error' {
   stub 'some-container-id\n' docker run
   stub_err 'something went wrong\n' 123 docker inspect
-  stub_err '' 123 ansible
-  touch ${ANSIBLE_PRIVATE_KEY_FILE}.pub
-  run container_startup fedora
-  [[ $status == 7 ]]
-}
-
-@test 'container startup with ssh timeout' {
-  stub 'some-container-id\n' docker
-  stub_err '' 123 ansible
-  touch ${ANSIBLE_PRIVATE_KEY_FILE}.pub
-  run container_startup fedora
-  [[ $status == 8 ]]
-}
-
-@test 'container startup with valid container type and container name' {
-  stub 'some-container-id\n' docker run
-  stub 'localhost | SUCCESS => {}\n' ansible
-  stub '1.2.3.4' docker inspect
-  touch ${ANSIBLE_PRIVATE_KEY_FILE}.pub
-  run container_startup fedora some-container
-  [[ $output == 'some-container|1.2.3.4|22|some-container-id' ]]
+  run container_startup debian
+  [[ $status == 4 ]]
 }
 
 @test 'container cleanup with one container' {
@@ -87,14 +49,9 @@ load ../load
   [[ $status == 0 ]]
 }
 
-@test 'container inventory with valid container' {
-  run container_inventory 'container|some-ssh-host|some-ssh-port|some-container-id'
-  [[ $output == 'container ansible_host=some-ssh-host ansible_port=some-ssh-port' ]]
-}
-
-@test 'container inventory with invalid container' {
-  run container_inventory 'container|some-ssh-host|some-ssh-port'
-  [[ $status > 0 ]]
+@test 'container inventory' {
+  run container_inventory 'some-container-id'
+  [[ $output == 'container ansible_host=some-container-id ansible_connection=docker' ]]
 }
 
 @test 'container inventory with no container' {
@@ -103,13 +60,13 @@ load ../load
 }
 
 @test 'container exec module with no module name' {
-  local _container='container|some-ssh-host|some-ssh-port|some-container-id'
+  local _container='some-container-id'
   run container_exec $_container
   [[ $status > 0 ]]
 }
 
 @test 'container exec module with module name' {
-  local _container='container|some-ssh-host|some-ssh-port|some-container-id'
+  local _container='some-container-id'
   local _tmp _args_record _args
   _tmp=$(stub_and_record 'container | SUCCESS => {}\nstdout from some-module\n' ansible)
   run container_exec_module $_container some-module
@@ -126,7 +83,7 @@ load ../load
 }
 
 @test 'container exec module with module name and args' {
-  local _container='container|some-ssh-host|some-ssh-port|some-container-id'
+  local _container='some-container-id'
   local _tmp _args_record _args
   _tmp=$(stub_and_record 'container | SUCCESS => {}\nstdout from some-module\n' ansible)
   run container_exec_module $_container some-module "arg-one=val-one arg-two='val two' arg-three=\"val three\""
@@ -142,7 +99,7 @@ load ../load
 }
 
 @test 'container exec module with module name and sudo' {
-  local _container='container|some-ssh-host|some-ssh-port|some-container-id'
+  local _container='some-container-id'
   local _tmp _args_record _args
   _tmp=$(stub_and_record 'container | SUCCESS => {}\nstdout from some-module\n' ansible)
   run container_exec_module_sudo $_container some-module
@@ -169,13 +126,13 @@ load ../load
 }
 
 @test 'container exec with no command' {
-  local _container='container|some-ssh-host|some-ssh-port|some-container-id'
+  local _container='some-container-id'
   run container_exec $_container
   [[ $status > 0 ]]
 }
 
 @test 'container exec with command' {
-  local _container='container|some-ssh-host|some-ssh-port|some-container-id'
+  local _container='some-container-id'
   local _tmp _args_record _args
   _tmp=$(stub_and_record 'container | SUCCESS | rc=0 >>\nstdout from some-command\n' ansible)
   run container_exec $_container some-command
@@ -192,7 +149,7 @@ load ../load
 }
 
 @test 'container exec with command that fails' {
-  local _container='container|some-ssh-host|some-ssh-port|some-container-id'
+  local _container='some-container-id'
   stub_err 'container | FAILED | rc=1 >>\n' 123 ansible
   run container_exec $_container some-command-that-fails
   [[ $status == 123 ]]
@@ -200,7 +157,7 @@ load ../load
 }
 
 @test 'container exec with command and ansible fails' {
-  local _container='container|some-ssh-host|some-ssh-port|some-container-id'
+  local _container='some-container-id'
   stub_err 'container | UNREACHABLE! => {\n}' 123 ansible
   run container_exec $_container some-command
   [[ $status == 123 ]] 
@@ -208,7 +165,7 @@ load ../load
 }
 
 @test 'container exec with command that has no output' {
-  local _container='container|some-ssh-host|some-ssh-port|some-container-id'
+  local _container='some-container-id'
   local _tmp _args_record _args
   _tmp=$(stub_and_record 'container | SUCCESS | rc=0 >>\n' ansible)
   run container_exec $_container some-command
@@ -224,7 +181,7 @@ load ../load
 }
 
 @test 'container exec with command that has args' {
-  local _container='container|some-ssh-host|some-ssh-port|some-container-id'
+  local _container='some-container-id'
   local _tmp _args_record _args
   _tmp=$(stub_and_record 'container | rc=0 >>\n' ansible)
   container_exec $_container some-command arg-one arg-two 'arg three' "arg four" 'http://arg/five?a=b&x=y' "~/arg.*/six" -opt-a arg
@@ -239,7 +196,7 @@ load ../load
 }
 
 @test 'container exec with command and sudo' {
-  local _container='container|some-ssh-host|some-ssh-port|some-container-id'
+  local _container='some-container-id'
   local _tmp _args_record _args
   _tmp=$(stub_and_record 'container | SUCCESS | rc=0 >>\nstdout from some-command\n' ansible)
   run container_exec_sudo $_container some-command
@@ -256,7 +213,7 @@ load ../load
 }
 
 @test 'container dnf conf' {
-  local _container='container|some-ssh-host|some-ssh-port|some-container-id'
+  local _container='some-container-id'
   local _tmp _args_record _args
   _tmp=$(stub_and_record 'container | SUCCESS => {}\n' ansible)
   container_dnf_conf $_container some-key some-value
@@ -272,13 +229,13 @@ load ../load
 }
 
 @test 'container dnf conf with no conf value' {
-  local _container='container|some-ssh-host|some-ssh-port|some-container-id'
+  local _container='some-container-id'
   run container_dnf_conf $_container some-key
   [[ $status > 0 ]]
 }
 
 @test 'container dnf conf with no conf key or value' {
-  local _container='container|some-ssh-host|some-ssh-port|some-container-id'
+  local _container='some-container-id'
   run container_dnf_conf $_container
   [[ $status > 0 ]]
 }
