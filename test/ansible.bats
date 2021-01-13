@@ -10,7 +10,6 @@ load ../load
   stub '' docker cp
   stub '' docker exec
   run container_startup debian
-  echo $output
   [[ $output == 'some-container-id' ]]
 }
 
