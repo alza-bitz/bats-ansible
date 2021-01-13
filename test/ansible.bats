@@ -5,7 +5,7 @@ load ../src/stub
 load ../load
 
 @test 'container startup' {
-  stub 'some-container-id\n' docker run
+  stub 'some-container-id\n' 'docker run'
   stub 'true' docker inspect
   stub '' docker cp
   stub '' docker exec
