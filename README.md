@@ -1,6 +1,6 @@
 # bats-ansible
 
-[![Build Status](https://travis-ci.org/alzadude/bats-ansible.svg?branch=master)](https://travis-ci.org/alzadude/bats-ansible)
+[![Build](https://github.com/alzadude/bats-ansible/workflows/Build/badge.svg)](https://github.com/alzadude/bats-ansible/actions?query=workflow%3ABuild)
 
 `bats-ansible` is a helper library providing useful functions for
 testing [Ansible][ansible] roles using [Bats][bats].
@@ -8,18 +8,15 @@ testing [Ansible][ansible] roles using [Bats][bats].
 These functions allow the creation of Bats test suites with
 the following features:
 
-- Start one or more containers that will form your test inventory.
+- Start one or more Docker containers that will form your test inventory.
 - Apply the role under test to some or all of the inventory, using
 your test playbook definitions.
-- Make state-based verifications on the inventory, using the functions
-provided, in combination with standard Bats assertion techniques or with
-the third-party [bats-assert][bats-assert] library instead.
+- Make state-based verifications on the inventory, using the functions provided, in combination with standard Bats assertion techniques or with the third-party [bats-assert][bats-assert] library instead.
 - Clean up the test inventory at the end of the test.
 
 ## Example
 
-A simple example best illustrates the intended use. The following example
-includes some tests for a ficticious Ansible role named `somerole`.
+A simple example best illustrates the intended use. The following example includes some tests for a ficticious Ansible role named `somerole`.
 
 **tests/test.yml**:
 ```yaml
@@ -61,32 +58,38 @@ teardown() {
   container_cleanup
 }
 ```
+These tests could now be run using bats.
+
+    $ bats tests/somerole-container.bats
 
 ## Dependencies
+
+### Host
 - [Docker][docker] for the containers in the test inventory.
-- [Ansible][ansible] for applying the role under test; it is also directly
-required by some helper functions.
+- [Ansible][ansible] for applying the role under test; it is also directly required by some helper functions.
 - [Bats][bats] itself for executing tests that make use of the library.
 
-## Installation
+### Container
+The following packages and commands will need to be installed in the Docker image being used for containers:
+- Python; this is an Ansible requirement.
+- Sudo; if you need to make use of the Ansible `become` features.
 
-There are multiple supported installation methods. One may be better
-than the others depending on your case.
+## Install
 
-### Git submodule
+There are multiple supported installation methods. One may be better than the others depending on your case.
 
-If your Ansible role project uses Git, the recommended method of installation is via
-a [submodule][git-book-submod].
+### Git Submodule
 
-*__Note:__ The following example installs libraries in the
-`./tests` directory of your Ansible role.*
+If your Ansible role project uses Git, the recommended method of installation is via a [submodule][git-book-submod].
+
+*__Note:__ The following example installs libraries in the `./tests` directory of your Ansible role.*
 
 ```sh
 $ git submodule add https://github.com/alzadude/bats-ansible tests/bats-ansible
 $ git commit -m 'Add bats-ansible library'
 ```
 
-### Git clone
+### Git Clone
 
 If you do not use Git for your role project, simply [clone][git-book-clone] the repository.
 
@@ -102,17 +105,14 @@ $ git clone https://github.com/alzadude/bats-ansible tests/bats-ansible
 A library is loaded by sourcing the `load.bash` file in its main
 directory.
 
-Assuming that libraries are installed in the `tests` directory of your Ansible
-role, adding the following line to a file in the `tests` directory will load the
-`bats-ansible` library.
+Assuming that libraries are installed in the `tests` directory of your Ansible role, adding the following line to a file in the `tests` directory will load the `bats-ansible` library.
 
 ```sh
 load 'bats-ansible/load'
 ```
 
 *__Note:__ The [`load`][bats-load] function sources a file (with
-`.bash` extension automatically appended) relative to the location of
-the current test file.*
+`.bash` extension automatically appended) relative to the location of the current test file.*
 
 If a library depends on other libraries, they must be loaded as well.
 
@@ -121,14 +121,9 @@ If a library depends on other libraries, they must be loaded as well.
 
 ### `container_startup`
 
-Start a container of the given type and with the given 'host' name, and emit 
-pipe-separated container details to stdout.
+Start a container using the specified image, and emit the container id to stdout. 
 
-If not given, the 'host' name of the container (for Ansible inventory purposes)
-defaults to `container`.
-
-Fails if the given container type is invalid, or if the container could not be started
-for some reason.
+Fails if the image does not exist, or if the container could not be started for some reason.
 
 ```bash
 setup() {
@@ -136,27 +131,42 @@ setup() {
 }
 ```
 
-On failure, the currently running test will fail and an error message concerning
-the cause of the failure will be displayed.
+On failure, the currently running test will fail and an error message concerning the cause of the failure will be displayed.
 
 ### `container_cleanup`
 
+### `useradd_test`
+
 ### `container_inventory`
+
+### `container_exec_module`
+
+### `container_exec_module_sudo`
 
 ### `container_exec`
 
 ### `container_exec_sudo`
 
-### `container_exec_module`
-
 ### `container_dnf_conf`
+
+## Development
+
+### Loading
+
+    $ source ./load.bash
+
+The function library will then be available in the current shell for development use. Due to the use of readonly variables, a new shell will be needed to reload any changes that have been made.
+
+### Testing
+
+    $ bats test/*.bats
 
 <!-- REFERENCES -->
 
-[bats]: http://github.com/sstephenson/bats
+[bats]: https://github.com/bats-core/bats-core
 [ansible]: http://www.ansible.com
-[bats-assert]: http://github.com/ztombol/bats-assert
+[bats-assert]: https://github.com/bats-core/bats-assert
 [docker]: http://docker.com
 [git-book-submod]: https://git-scm.com/book/en/v2/Git-Tools-Submodules
 [git-book-clone]: https://git-scm.com/book/en/v2/Git-Basics-Getting-a-Git-Repository#Cloning-an-Existing-Repository
-[bats-load]: https://github.com/sstephenson/bats#load-share-common-code
+[bats-load]: https://bats-core.readthedocs.io/en/latest/writing-tests.html#load-share-common-code

@@ -1,5 +1,5 @@
 
-[[ -v BATS_ANSIBLE_TMPDIR ]] || export BATS_ANSIBLE_TMPDIR=$(mktemp -d)
+readonly BATS_ANSIBLE_TMPDIR=$(mktemp -d)
 
 trap 'tmp_cleanup' EXIT
 

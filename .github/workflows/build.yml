@@ -1,0 +1,17 @@
+name: "Build"
+on: [push, workflow_dispatch]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && contains(toJson(github.event.commits), '[ci skip]') == false && contains(toJson(github.event.commits), '[skip ci]') == false
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v2
+      - name: "Install Dependencies"
+        run: |
+          pushd ..
+          git clone https://github.com/bats-core/bats-core.git
+          sudo bats-core/install.sh /usr/local
+          popd
+      - name: "Tests"
+        run: bats test/*.bats
