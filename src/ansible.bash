@@ -7,6 +7,8 @@ readonly BATS_ANSIBLE_TEST_RUN=$(set -o pipefail; (< /dev/urandom tr -dc 0-9 2>/
 
 container_testuser() {
   useradd -m -s /bin/bash test
+  mkdir -p /etc/sudoers.d
+  printf '%s ALL=(ALL) NOPASSWD: ALL\n' test > /etc/sudoers.d/test
 }
 
 container_wait() {
@@ -51,7 +53,7 @@ __container_exec_module() {
   local IFS='|' _sudo=$1 _container=$2 _name=$3 _args=$4 _hosts
   _hosts=$(tmp_file_empty)
   container_inventory $_container > $_hosts
-  ANSIBLE_LIBRARY=${BATS_TEST_DIRNAME}/.. ansible container -i $_hosts -u test ${_sudo:+-s} -m $_name ${_args:+-a} $_args
+  ANSIBLE_LIBRARY=${BATS_TEST_DIRNAME}/.. ansible container -i $_hosts -u test ${_sudo:+-b} -m $_name ${_args:+-a} $_args
 }
 
 container_exec_module() {
@@ -85,7 +87,7 @@ __container_exec() {
   shift 2
   _cmd=$(__print_args "$@")
   (set -o pipefail;
-    ansible container -i $_hosts -u test ${_sudo:+-s} -m shell -a "$_cmd" | sed -r -e '1!b' -e '/rc=[0-9]+/d')
+    ansible container -i $_hosts -u test ${_sudo:+-b} -m shell -a "$_cmd" | sed -r -e '1!b' -e '/rc=[0-9]+/d')
 }
 
 container_exec() {
@@ -103,6 +105,6 @@ container_dnf_conf() {
   local _container=$1 _name=$2 _value=$3 _hosts
   _hosts=$(tmp_file_empty)
   container_inventory $_container > $_hosts
-  ansible container -i $_hosts -u test -s -m lineinfile -a \
+  ansible container -i $_hosts -u test -b -m lineinfile -a \
     "dest=/etc/dnf/dnf.conf regexp='^$_name=\S+$' line='$_name=$_value'" > /dev/null
 }

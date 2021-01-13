@@ -97,7 +97,7 @@ load ../load
   [[ $_args =~ ^container ]]
   [[ $_args =~ -i\ [^[:space:]]+ ]]
   [[ $_args =~ ' -u test ' ]]
-  [[ ! $_args =~ ' -s ' ]]
+  [[ ! $_args =~ ' -b ' ]]
   [[ $_args =~ \ -m\ some-module$ ]]
   [[ ! $_args =~ ' -a ' ]]
 }
@@ -130,7 +130,7 @@ load ../load
   [[ $_args =~ ^container ]]
   [[ $_args =~ -i\ [^[:space:]]+ ]]
   [[ $_args =~ ' -u test ' ]]
-  [[ $_args =~ ' -s ' ]]
+  [[ $_args =~ ' -b ' ]]
   [[ $_args =~ \ -m\ some-module$ ]]
   [[ ! $_args =~ ' -a ' ]]
 }
@@ -227,7 +227,7 @@ load ../load
   [[ $_args =~ ^container ]]
   [[ $_args =~ -i\ [^[:space:]]+ ]]
   [[ $_args =~ ' -u test ' ]]
-  [[ $_args =~ ' -s ' ]]
+  [[ $_args =~ ' -b ' ]]
   [[ $_args =~ ' -m shell ' ]]
   [[ $_args =~ \ -a\ some-command$ ]]
 }
@@ -243,7 +243,7 @@ load ../load
   [[ $_args =~ ^container ]]
 #  [[ $_args =~ "-i \S+" ]]
   [[ $_args =~ ' -u test ' ]]
-  [[ $_args =~ ' -s ' ]]
+  [[ $_args =~ ' -b ' ]]
   [[ $_args =~ ' -m lineinfile ' ]]
   [[ $_args =~ " -a \"dest=/etc/dnf/dnf.conf regexp='^some-key=\S+$' line='some-key=some-value'\"" ]]
 }

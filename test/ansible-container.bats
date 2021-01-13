@@ -34,6 +34,15 @@ load ../load
   [[ $output =~ '/bin/sh: 1: some-command: not found' ]]
 }
 
+@test 'container exec sudo' {
+  local _container
+  _container=$(container_startup python)
+  docker exec $_container sh -c 'apt update && apt install -y sudo'
+  run container_exec_sudo $_container id
+  [[ $status == 0 ]]
+  [[ $output =~ uid=0.*gid=0 ]]
+}
+
 teardown() {
   docker ps -q -f label=bats_ansible_test_run=$BATS_ANSIBLE_TEST_RUN | xargs -r docker stop > /dev/null
   docker ps -q -a -f label=bats_ansible_test_run=$BATS_ANSIBLE_TEST_RUN | xargs -r docker rm > /dev/null
