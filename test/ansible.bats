@@ -4,14 +4,14 @@ load ../src/stub
 
 load ../load
 
-@test 'container startup' {
-  stub 'some-container-id\n' 'docker run'
-  stub 'true' docker inspect
-  stub '' docker cp
-  stub '' docker exec
-  run container_startup debian
-  [[ $output == 'some-container-id' ]]
-}
+# @test 'container startup' {
+#   stub 'some-container-id\n' docker run
+#   stub 'true' docker inspect
+#   stub '' docker cp
+#   stub '' docker exec
+#   run container_startup debian
+#   [[ $output == 'some-container-id' ]]
+# }
 
 @test 'container startup with no image' {
   stub_err '' 123 docker
