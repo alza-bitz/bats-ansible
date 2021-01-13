@@ -3,7 +3,7 @@
 load ../load
 
 @test 'container startup' {
-  local _container _mounts
+  local _container
   _container=$(container_startup python)
   docker ps -q --no-trunc | grep $_container
 }

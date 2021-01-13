@@ -7,7 +7,10 @@ load ../load
 @test 'container startup' {
   stub 'some-container-id\n' docker run
   stub 'true' docker inspect
+  stub '' docker cp
+  stub '' docker exec
   run container_startup debian
+  echo $output
   [[ $output == 'some-container-id' ]]
 }
 
@@ -35,6 +38,23 @@ load ../load
   stub_err 'something went wrong\n' 123 docker inspect
   run container_startup debian
   [[ $status == 4 ]]
+}
+
+@test 'container startup with docker cp error' {
+  stub 'some-container-id\n' docker run
+  stub 'true' docker inspect
+  stub_err 'something went wrong\n' 123 docker cp
+  run container_startup debian
+  [[ $status == 5 ]]
+}
+
+@test 'container startup with docker exec error' {
+  stub 'some-container-id\n' docker run
+  stub 'true' docker inspect
+  stub '' docker cp
+  stub_err 'something went wrong\n' 123 docker exec
+  run container_startup debian
+  [[ $status == 5 ]]
 }
 
 @test 'container cleanup with one container' {
