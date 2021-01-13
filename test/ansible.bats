@@ -70,7 +70,7 @@ load ../load
 
 @test 'container inventory' {
   run container_inventory 'some-container-id'
-  [[ $output == 'container ansible_host=some-container-id ansible_connection=docker' ]]
+  [[ $output == 'target ansible_host=some-container-id ansible_connection=docker' ]]
 }
 
 @test 'container inventory with no container' {
@@ -87,13 +87,13 @@ load ../load
 @test 'container exec module with module name' {
   local _container='some-container-id'
   local _tmp _args_record _args
-  _tmp=$(stub_and_record 'container | SUCCESS => {}\nstdout from some-module\n' ansible)
+  _tmp=$(stub_and_record 'target | SUCCESS => {}\nstdout from some-module\n' ansible)
   run container_exec_module $_container some-module
   [[ $output =~ 'stdout from some-module' ]]
   IFS=$'\n' _args_record=($(< $_tmp))
   [[ ${#_args_record[@]} == 1 ]]
   _args=${_args_record[0]}
-  [[ $_args =~ ^container ]]
+  [[ $_args =~ ^target ]]
   [[ $_args =~ -i\ [^[:space:]]+ ]]
   [[ $_args =~ ' -u test ' ]]
   [[ ! $_args =~ ' -b ' ]]
@@ -104,13 +104,13 @@ load ../load
 @test 'container exec module with module name and args' {
   local _container='some-container-id'
   local _tmp _args_record _args
-  _tmp=$(stub_and_record 'container | SUCCESS => {}\nstdout from some-module\n' ansible)
+  _tmp=$(stub_and_record 'target | SUCCESS => {}\nstdout from some-module\n' ansible)
   run container_exec_module $_container some-module "arg-one=val-one arg-two='val two' arg-three=\"val three\""
   [[ $output =~ 'stdout from some-module' ]]
   IFS=$'\n' _args_record=($(< $_tmp))
   [[ ${#_args_record[@]} == 1 ]]
   _args=${_args_record[0]}
-  [[ $_args =~ ^container ]]
+  [[ $_args =~ ^target ]]
   [[ $_args =~ -i\ [^[:space:]]+ ]]
   [[ $_args =~ ' -u test ' ]]
   [[ $_args =~ ' -m some-module ' ]]
@@ -120,13 +120,13 @@ load ../load
 @test 'container exec module with module name and sudo' {
   local _container='some-container-id'
   local _tmp _args_record _args
-  _tmp=$(stub_and_record 'container | SUCCESS => {}\nstdout from some-module\n' ansible)
+  _tmp=$(stub_and_record 'target | SUCCESS => {}\nstdout from some-module\n' ansible)
   run container_exec_module_sudo $_container some-module
   [[ $output =~ 'stdout from some-module' ]]
   IFS=$'\n' _args_record=($(< $_tmp))
   [[ ${#_args_record[@]} == 1 ]]
   _args=${_args_record[0]}
-  [[ $_args =~ ^container ]]
+  [[ $_args =~ ^target ]]
   [[ $_args =~ -i\ [^[:space:]]+ ]]
   [[ $_args =~ ' -u test ' ]]
   [[ $_args =~ ' -b ' ]]
@@ -153,13 +153,13 @@ load ../load
 @test 'container exec with command' {
   local _container='some-container-id'
   local _tmp _args_record _args
-  _tmp=$(stub_and_record 'container | SUCCESS | rc=0 >>\nstdout from some-command\n' ansible)
+  _tmp=$(stub_and_record 'target | SUCCESS | rc=0 >>\nstdout from some-command\n' ansible)
   run container_exec $_container some-command
   [[ $output == 'stdout from some-command' ]]
   IFS=$'\n' _args_record=($(< $_tmp))
   [[ ${#_args_record[@]} == 1 ]]
   _args=${_args_record[0]}
-  [[ $_args =~ ^container ]]
+  [[ $_args =~ ^target ]]
   [[ $_args =~ -i\ [^[:space:]]+ ]]
   [[ $_args =~ ' -u test ' ]]
   [[ ! $_args =~ ' -s ' ]]
@@ -169,7 +169,7 @@ load ../load
 
 @test 'container exec with command that fails' {
   local _container='some-container-id'
-  stub_err 'container | FAILED | rc=1 >>\n' 123 ansible
+  stub_err 'target | FAILED | rc=1 >>\n' 123 ansible
   run container_exec $_container some-command-that-fails
   [[ $status == 123 ]]
   [[ $output == '' ]]
@@ -177,22 +177,22 @@ load ../load
 
 @test 'container exec with command and ansible fails' {
   local _container='some-container-id'
-  stub_err 'container | UNREACHABLE! => {\n}' 123 ansible
+  stub_err 'target | UNREACHABLE! => {\n}' 123 ansible
   run container_exec $_container some-command
   [[ $status == 123 ]] 
-  [[ $output == 'container | UNREACHABLE! => {'$'\n''}' ]]
+  [[ $output == 'target | UNREACHABLE! => {'$'\n''}' ]]
 }
 
 @test 'container exec with command that has no output' {
   local _container='some-container-id'
   local _tmp _args_record _args
-  _tmp=$(stub_and_record 'container | SUCCESS | rc=0 >>\n' ansible)
+  _tmp=$(stub_and_record 'target | SUCCESS | rc=0 >>\n' ansible)
   run container_exec $_container some-command
   [[ $output == '' ]]
   IFS=$'\n' _args_record=($(< $_tmp))
   [[ ${#_args_record[@]} == 1 ]]
   _args=${_args_record[0]}
-  [[ $_args =~ ^container ]]
+  [[ $_args =~ ^target ]]
   [[ $_args =~ -i\ [^[:space:]]+ ]]
   [[ $_args =~ ' -u test ' ]]
   [[ $_args =~ ' -m shell ' ]]
@@ -202,12 +202,12 @@ load ../load
 @test 'container exec with command that has args' {
   local _container='some-container-id'
   local _tmp _args_record _args
-  _tmp=$(stub_and_record 'container | rc=0 >>\n' ansible)
+  _tmp=$(stub_and_record 'target | rc=0 >>\n' ansible)
   container_exec $_container some-command arg-one arg-two 'arg three' "arg four" 'http://arg/five?a=b&x=y' "~/arg.*/six" -opt-a arg
   IFS=$'\n' _args_record=($(< $_tmp))
   [[ ${#_args_record[@]} == 1 ]]
   _args=${_args_record[0]}
-  [[ $_args =~ ^container ]]
+  [[ $_args =~ ^target ]]
   [[ $_args =~ -i\ [^[:space:]]+ ]]
   [[ $_args =~ ' -u test ' ]]
   [[ $_args =~ ' -m shell ' ]]
@@ -217,13 +217,13 @@ load ../load
 @test 'container exec with command and sudo' {
   local _container='some-container-id'
   local _tmp _args_record _args
-  _tmp=$(stub_and_record 'container | SUCCESS | rc=0 >>\nstdout from some-command\n' ansible)
+  _tmp=$(stub_and_record 'target | SUCCESS | rc=0 >>\nstdout from some-command\n' ansible)
   run container_exec_sudo $_container some-command
   [[ $output == 'stdout from some-command' ]]
   IFS=$'\n' _args_record=($(< $_tmp))
   [[ ${#_args_record[@]} == 1 ]]
   _args=${_args_record[0]}
-  [[ $_args =~ ^container ]]
+  [[ $_args =~ ^target ]]
   [[ $_args =~ -i\ [^[:space:]]+ ]]
   [[ $_args =~ ' -u test ' ]]
   [[ $_args =~ ' -b ' ]]
@@ -234,12 +234,12 @@ load ../load
 @test 'container dnf conf' {
   local _container='some-container-id'
   local _tmp _args_record _args
-  _tmp=$(stub_and_record 'container | SUCCESS => {}\n' ansible)
+  _tmp=$(stub_and_record 'target | SUCCESS => {}\n' ansible)
   container_dnf_conf $_container some-key some-value
   IFS=$'\n' _args_record=($(< $_tmp))
   [[ ${#_args_record[@]} == 1 ]]
   _args=${_args_record[0]}
-  [[ $_args =~ ^container ]]
+  [[ $_args =~ ^target ]]
 #  [[ $_args =~ "-i \S+" ]]
   [[ $_args =~ ' -u test ' ]]
   [[ $_args =~ ' -b ' ]]

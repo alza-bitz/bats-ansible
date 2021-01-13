@@ -5,7 +5,7 @@ readonly BATS_ANSIBLE_DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>
 readonly BATS_ANSIBLE_TEST_RUN=$(set -o pipefail; (< /dev/urandom tr -dc 0-9 2>/dev/null || true) | head -c 5)
 
 
-container_testuser() {
+useradd_test() {
   useradd -m -s /bin/bash test
   mkdir -p /etc/sudoers.d
   printf '%s ALL=(ALL) NOPASSWD: ALL\n' test > /etc/sudoers.d/test
@@ -33,9 +33,9 @@ container_startup() {
     $_container_image bash -c 'while true; do sleep 10000; done') || return 3
   container_wait $_container_id || { printf 'container_startup: timed out waiting for container to start\n' >&2; return 4; }
   { docker cp $BATS_ANSIBLE_DIR $_container_id:/bats-ansible && \
-    docker exec $_container_id bash -c 'set -e; source /bats-ansible/load.bash; container_testuser'; } || \
+    docker exec $_container_id bash -c 'set -e; source /bats-ansible/load.bash; useradd_test'; } || \
       { printf 'container_startup: could not create test user\n' >&2; return 5; }
-  printf '%s' $_container_id
+  printf '%s\n' $_container_id
 }
 
 container_cleanup() {
@@ -46,14 +46,14 @@ container_cleanup() {
 container_inventory() {
   [[ $# == 1 ]] || { printf 'container_inventory: container required\n' >&2; return 1; }
   local _host=$1
-  printf 'container ansible_host=%s ansible_connection=docker\n' $_host
+  printf 'target ansible_host=%s ansible_connection=docker\n' $_host
 }
 
 __container_exec_module() {
   local IFS='|' _sudo=$1 _container=$2 _name=$3 _args=$4 _hosts
   _hosts=$(tmp_file_empty)
   container_inventory $_container > $_hosts
-  ANSIBLE_LIBRARY=${BATS_TEST_DIRNAME}/.. ansible container -i $_hosts -u test ${_sudo:+-b} -m $_name ${_args:+-a} $_args
+  ANSIBLE_LIBRARY=${BATS_TEST_DIRNAME}/.. ansible target -i $_hosts -u test ${_sudo:+-b} -m $_name ${_args:+-a} $_args
 }
 
 container_exec_module() {
@@ -87,7 +87,7 @@ __container_exec() {
   shift 2
   _cmd=$(__print_args "$@")
   (set -o pipefail;
-    ansible container -i $_hosts -u test ${_sudo:+-b} -m shell -a "$_cmd" | sed -r -e '1!b' -e '/rc=[0-9]+/d')
+    ansible target -i $_hosts -u test ${_sudo:+-b} -m shell -a "$_cmd" | sed -r -e '1!b' -e '/rc=[0-9]+/d')
 }
 
 container_exec() {
@@ -105,6 +105,6 @@ container_dnf_conf() {
   local _container=$1 _name=$2 _value=$3 _hosts
   _hosts=$(tmp_file_empty)
   container_inventory $_container > $_hosts
-  ansible container -i $_hosts -u test -b -m lineinfile -a \
+  ansible target -i $_hosts -u test -b -m lineinfile -a \
     "dest=/etc/dnf/dnf.conf regexp='^$_name=\S+$' line='$_name=$_value'" > /dev/null
 }

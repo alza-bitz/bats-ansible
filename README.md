@@ -8,7 +8,7 @@ testing [Ansible][ansible] roles using [Bats][bats].
 These functions allow the creation of Bats test suites with
 the following features:
 
-- Start one or more containers that will form your test inventory.
+- Start one or more Docker containers that will form your test inventory.
 - Apply the role under test to some or all of the inventory, using
 your test playbook definitions.
 - Make state-based verifications on the inventory, using the functions provided, in combination with standard Bats assertion techniques or with the third-party [bats-assert][bats-assert] library instead.
@@ -63,15 +63,22 @@ These tests could now be run using bats.
     $ bats tests/somerole-container.bats
 
 ## Dependencies
+
+### Host
 - [Docker][docker] for the containers in the test inventory.
 - [Ansible][ansible] for applying the role under test; it is also directly required by some helper functions.
 - [Bats][bats] itself for executing tests that make use of the library.
 
-## Installation
+### Container
+The following packages and commands will need to be installed in the Docker image being used for containers:
+- Python; this is an Ansible requirement.
+- Sudo; if you need to make use of the Ansible `become` features.
+
+## Install
 
 There are multiple supported installation methods. One may be better than the others depending on your case.
 
-### Git submodule
+### Git Submodule
 
 If your Ansible role project uses Git, the recommended method of installation is via a [submodule][git-book-submod].
 
@@ -82,7 +89,7 @@ $ git submodule add https://github.com/alzadude/bats-ansible tests/bats-ansible
 $ git commit -m 'Add bats-ansible library'
 ```
 
-### Git clone
+### Git Clone
 
 If you do not use Git for your role project, simply [clone][git-book-clone] the repository.
 
@@ -114,7 +121,7 @@ If a library depends on other libraries, they must be loaded as well.
 
 ### `container_startup`
 
-Start a container using the specified image, and emit the container id to stdout.
+Start a container using the specified image, and emit the container id to stdout. 
 
 Fails if the image does not exist, or if the container could not be started for some reason.
 
@@ -127,6 +134,8 @@ setup() {
 On failure, the currently running test will fail and an error message concerning the cause of the failure will be displayed.
 
 ### `container_cleanup`
+
+### `useradd_test`
 
 ### `container_inventory`
 
@@ -156,7 +165,7 @@ The function library will then be available in the current shell for development
 
 [bats]: https://github.com/bats-core/bats-core
 [ansible]: http://www.ansible.com
-[bats-assert]: http://github.com/ztombol/bats-assert
+[bats-assert]: https://github.com/bats-core/bats-assert
 [docker]: http://docker.com
 [git-book-submod]: https://git-scm.com/book/en/v2/Git-Tools-Submodules
 [git-book-clone]: https://git-scm.com/book/en/v2/Git-Basics-Getting-a-Git-Repository#Cloning-an-Existing-Repository
