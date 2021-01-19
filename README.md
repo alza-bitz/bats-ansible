@@ -74,6 +74,11 @@ The following packages and commands will need to be installed in the Docker imag
 - Python; this is an Ansible requirement.
 - Sudo; if you need to make use of the Ansible `become` features.
 
+Various Docker images are provided with these packages preinstalled:
+
+- Debian: [alzadude/bats-ansible-debian](https://hub.docker.com/repository/docker/alzadude/bats-ansible-debian)
+- Fedora: [alzadude/bats-ansible-fedora](https://hub.docker.com/repository/docker/alzadude/bats-ansible-fedora)
+
 ## Install
 
 There are multiple supported installation methods. One may be better than the others depending on your case.
